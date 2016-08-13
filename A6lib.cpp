@@ -92,6 +92,12 @@ void A6::redial() {
 }
 
 
+// Answer a call.
+void A6::answer() {
+    A6command("ATA", "OK", "yy", 5000, 2);
+}
+
+
 // Hang up the phone.
 void A6::hangUp() {
     A6command("ATH", "OK", "yy", 5000, 2);

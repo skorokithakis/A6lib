@@ -14,6 +14,7 @@ public:
 
     void dial(String number);
     void redial();
+    void answer();
     void hangUp();
 
     void sendSMS(String number, String text);

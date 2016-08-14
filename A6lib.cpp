@@ -51,6 +51,9 @@ void A6::begin(long baudRate) {
 
     // Set SMS to text mode.
     A6command("AT+CMGF=1", "OK", "yy", 5000, 2);
+
+    // Switch audio to headset.
+    enableSpeaker(0);
 }
 
 
@@ -79,7 +82,6 @@ void A6::dial(String number) {
 
     logln("Dialing number...");
 
-    A6command("AT+SNFS=0", "OK", "yy", 5000, 2);
     sprintf(buffer, "ATD%s;", number.c_str());
     A6command(buffer, "OK", "yy", 5000, 2);
 }
@@ -113,12 +115,36 @@ void A6::sendSMS(String number, String text) {
     log(number);
     logln("...");
 
-    sprintf(buffer, "AT+CMGS = \"%s\"", number.c_str());
+    sprintf(buffer, "AT+CMGS=\"%s\"", number.c_str());
     A6command(buffer, ">", "yy", 5000, 2);
     delay(100);
     A6conn->println(text.c_str());
     A6conn->println(ctrlZ);
     A6conn->println();
+}
+
+
+// Set the volume for the speaker. level should be a number between 5 and
+// 8 inclusive.
+void A6::setVol(byte level) {
+    char buffer[30];
+
+    // level should be between 5 and 8.
+    level = min(max(level, 5), 8);
+    sprintf(buffer, "AT+CLVL=%d", level);
+    A6command(buffer, "OK", "yy", 5000, 2);
+}
+
+
+// Enable the speaker, rather than the headphones. Pass 0 to route audio through
+// headphones, 1 through speaker.
+void A6::enableSpeaker(byte enable) {
+    char buffer[30];
+
+    // enable should be between 0 and 1.
+    enable = min(max(enable, 0), 1);
+    sprintf(buffer, "AT+SNFS=%d", enable);
+    A6command(buffer, "OK", "yy", 5000, 2);
 }
 
 

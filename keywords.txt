@@ -22,6 +22,8 @@ hangUp       KEYWORD2
 
 sendSMS      KEYWORD2
 
+setVol       KEYWORD2
+
 #######################################
 # Constants (LITERAL1)
 #######################################

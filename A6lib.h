@@ -19,6 +19,9 @@ public:
 
     void sendSMS(String number, String text);
 
+    void setVol(byte level);
+    void enableSpeaker(byte enable);
+
     SoftwareSerial *A6conn;
 private:
     String read();

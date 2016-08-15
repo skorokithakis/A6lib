@@ -7,22 +7,27 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-A6 KEYWORD1
+A6                     KEYWORD1
+callInfo               KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
 
-begin        KEYWORD2
-powerCycle   KEYWORD2
+begin                  KEYWORD2
+powerCycle             KEYWORD2
 
-dial         KEYWORD2
-redial       KEYWORD2
-hangUp       KEYWORD2
+dial                   KEYWORD2
+redial                 KEYWORD2
+hangUp                 KEYWORD2
+checkCallStatus        KEYWORD2
 
-sendSMS      KEYWORD2
+sendSMS                KEYWORD2
 
-setVol       KEYWORD2
+setVol                 KEYWORD2
+enableSpeaker          KEYWORD2
+
+A6conn                 KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

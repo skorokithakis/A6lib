@@ -1,6 +1,6 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
-#include <A6lib.h>
+#include "SoftwareSerial.h"
+#include "A6lib.h"
 
 #ifdef DEBUG
 #define log(msg) Serial.print(msg)
@@ -13,7 +13,16 @@
 #define OK 1
 #define NOTOK 2
 #define TIMEOUT 3
-#define RST 2
+
+
+/* TODO:
+ *
+ * Read SMS: AT+CMGL="ALL"
+ *
+ * Check registration: AT+CREG?
+ *
+ * Check signal quality: AT+CSQ
+ */
 
 
 /////////////////////////////////////////////
@@ -22,6 +31,7 @@
 
 A6::A6(int transmitPin, int receivePin) {
     A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
+    A6conn->setTimeout(100);
 }
 
 
@@ -41,16 +51,16 @@ void A6::begin(long baudRate) {
     setRate(baudRate);
 
     // Factory reset.
-    A6command("AT&F", "OK", "yy", 5000, 2);
+    A6command("AT&F", "OK", "yy", 5000, 2, NULL);
 
     // Echo off.
-    A6command("ATE0", "OK", "yy", 5000, 2);
+    A6command("ATE0", "OK", "yy", 5000, 2, NULL);
 
     // Set caller ID on.
-    A6command("AT+CLIP=1", "OK", "yy", 5000, 2);
+    A6command("AT+CLIP=1", "OK", "yy", 5000, 2, NULL);
 
     // Set SMS to text mode.
-    A6command("AT+CMGF=1", "OK", "yy", 5000, 2);
+    A6command("AT+CMGF=1", "OK", "yy", 5000, 2, NULL);
 
     // Switch audio to headset.
     enableSpeaker(0);
@@ -83,26 +93,49 @@ void A6::dial(String number) {
     logln("Dialing number...");
 
     sprintf(buffer, "ATD%s;", number.c_str());
-    A6command(buffer, "OK", "yy", 5000, 2);
+    A6command(buffer, "OK", "yy", 5000, 2, NULL);
 }
 
 
 // Redial the last number.
 void A6::redial() {
     logln("Redialing last number...");
-    A6command("AT+DLST", "OK", "CONNECT", 5000, 2);
+    A6command("AT+DLST", "OK", "CONNECT", 5000, 2, NULL);
 }
 
 
 // Answer a call.
 void A6::answer() {
-    A6command("ATA", "OK", "yy", 5000, 2);
+    A6command("ATA", "OK", "yy", 5000, 2, NULL);
 }
 
 
 // Hang up the phone.
 void A6::hangUp() {
-    A6command("ATH", "OK", "yy", 5000, 2);
+    A6command("ATH", "OK", "yy", 5000, 2, NULL);
+}
+
+
+// Check whether there is an active call.
+callInfo A6::checkCallStatus() {
+    char number[50];
+    String response = "";
+    int respStart = 0, matched = 0;
+    callInfo cinfo = (const struct callInfo){ 0 };
+
+    // Issue the command and wait for the response.
+    A6command("AT+CLCC", "OK", "+CLCC", 5000, 2, &response);
+
+    // Parse the response if it contains a valid +CLCC.
+    respStart = response.indexOf("+CLCC");
+    if (respStart >= 0) {
+        matched = sscanf(response.substring(respStart).c_str(), "+CLCC: %d,%d,%d,%d,%d,\"%s\",%d", &cinfo.index, &cinfo.direction, &cinfo.state, &cinfo.mode, &cinfo.multiparty, number, &cinfo.type);
+        Serial.println("number:");
+        Serial.println(number);
+        cinfo.number = String(number);
+    }
+
+    return cinfo;
 }
 
 
@@ -116,7 +149,7 @@ void A6::sendSMS(String number, String text) {
     logln("...");
 
     sprintf(buffer, "AT+CMGS=\"%s\"", number.c_str());
-    A6command(buffer, ">", "yy", 5000, 2);
+    A6command(buffer, ">", "yy", 5000, 2, NULL);
     delay(100);
     A6conn->println(text.c_str());
     A6conn->println(ctrlZ);
@@ -132,7 +165,7 @@ void A6::setVol(byte level) {
     // level should be between 5 and 8.
     level = min(max(level, 5), 8);
     sprintf(buffer, "AT+CLVL=%d", level);
-    A6command(buffer, "OK", "yy", 5000, 2);
+    A6command(buffer, "OK", "yy", 5000, 2, NULL);
 }
 
 
@@ -144,7 +177,7 @@ void A6::enableSpeaker(byte enable) {
     // enable should be between 0 and 1.
     enable = min(max(enable, 0), 1);
     sprintf(buffer, "AT+SNFS=%d", enable);
-    A6command(buffer, "OK", "yy", 5000, 2);
+    A6command(buffer, "OK", "yy", 5000, 2, NULL);
 }
 
 
@@ -163,16 +196,17 @@ int A6::detectRate() {
     for (int i = 0; i < 8; i++) {
         switch (i) {
         case 0:
-            rate = 1200;
+            // Try the usual rate first, to speed things up.
+            rate = 9600;
             break;
         case 1:
-            rate = 2400;
+            rate = 1200;
             break;
         case 2:
-            rate = 4800;
+            rate = 2400;
             break;
         case 3:
-            rate = 9600;
+            rate = 4800;
             break;
         case 4:
             rate = 19200;
@@ -194,7 +228,7 @@ int A6::detectRate() {
         logln("...");
 
         delay(100);
-        if (A6command("AT", "OK", "OK", 2000, 2) == OK) {
+        if (A6command("AT", "OK", "OK", 2000, 2, NULL) == OK) {
             return rate;
         }
     }
@@ -215,7 +249,7 @@ void A6::setRate(long baudRate) {
     // Change the rate to the requested.
     char buffer[30];
     sprintf(buffer, "AT+IPR=%d", baudRate);
-    A6command(buffer, "OK", "+IPR=", 5000, 3);
+    A6command(buffer, "OK", "+IPR=", 5000, 3, NULL);
 
     logln("Switching to the new rate...");
     // Begin the connection again at the requested rate.
@@ -227,15 +261,13 @@ void A6::setRate(long baudRate) {
 // Read some data from the A6 in a non-blocking manner.
 String A6::read() {
     String reply = "";
-    if (A6conn->available())  {
-        reply = A6conn->readString();
-    }
+    if (A6conn->available()) reply = A6conn->readString();
     return reply;
 }
 
 
 // Issue a command.
-byte A6::A6command(String command, String resp1, String resp2, int timeout, int repetitions) {
+byte A6::A6command(const char *command, const char *resp1, const char *resp2, int timeout, int repetitions, String *response) {
     byte returnValue = NOTOK;
     byte count = 0;
 
@@ -249,7 +281,7 @@ byte A6::A6command(String command, String resp1, String resp2, int timeout, int 
         A6conn->print(command);
         A6conn->print("\r");
 
-        if (A6waitFor(resp1, resp2, timeout) == OK) {
+        if (A6waitFor(resp1, resp2, timeout, response) == OK) {
             returnValue = OK;
         } else {
             returnValue = NOTOK;
@@ -261,21 +293,24 @@ byte A6::A6command(String command, String resp1, String resp2, int timeout, int 
 
 
 // Wait for responses.
-byte A6::A6waitFor(String resp1, String resp2, int timeout) {
+byte A6::A6waitFor(const char *resp1, const char *resp2, int timeout, String *response) {
     unsigned long entry = millis();
     int count = 0;
     String reply = "";
     byte retVal = 99;
     do {
-        reply = read();
-        if (reply != "") {
-            log("Reply in ");
-            log((millis() - entry));
-            log(" ms: ");
-            logln(reply);
-        }
+        reply += read();
         yield();
     } while ((reply.indexOf(resp1) + reply.indexOf(resp2) == -2) && millis() - entry < timeout);
+
+    if (reply != "") {
+        log("Reply in ");
+        log((millis() - entry));
+        log(" ms: ");
+        logln(reply);
+    }
+
+    if (response != NULL) *response = reply;
 
     if ((millis() - entry) >= timeout) {
         retVal = TIMEOUT;

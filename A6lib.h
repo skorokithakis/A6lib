@@ -5,11 +5,39 @@
 #include "SoftwareSerial.h"
 
 
+enum call_direction {
+    DIR_OUTGOING = 0,
+    DIR_INCOMING = 1
+};
+
+enum call_state {
+    CALL_ACTIVE = 0,
+    CALL_HELD = 1,
+    CALL_DIALING = 2,
+    CALL_ALERTING = 3,
+    CALL_INCOMING = 4,
+    CALL_WAITING = 5,
+    CALL_RELEASE = 7
+};
+
+enum call_mode {
+    MODE_VOICE = 0,
+    MODE_DATA = 1,
+    MODE_FAX = 2,
+    MODE_VOICE_THEN_DATA_VMODE = 3,
+    MODE_VOICE_AND_DATA_VMODE = 4,
+    MODE_VOICE_AND_FAX_VMODE = 5,
+    MODE_VOICE_THEN_DATA_DMODE = 6,
+    MODE_VOICE_AND_DATA_DMODE = 7,
+    MODE_VOICE_AND_FAX_FMODE = 8,
+    MODE_UNKNOWN = 9
+};
+
 struct callInfo {
     int index;
-    int direction;
-    int state;
-    int mode;
+    call_direction direction;
+    call_state state;
+    call_mode mode;
     int multiparty;
     String number;
     int type;

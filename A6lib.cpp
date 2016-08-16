@@ -130,8 +130,6 @@ callInfo A6::checkCallStatus() {
     respStart = response.indexOf("+CLCC");
     if (respStart >= 0) {
         matched = sscanf(response.substring(respStart).c_str(), "+CLCC: %d,%d,%d,%d,%d,\"%s\",%d", &cinfo.index, &cinfo.direction, &cinfo.state, &cinfo.mode, &cinfo.multiparty, number, &cinfo.type);
-        Serial.println("number:");
-        Serial.println(number);
         cinfo.number = String(number);
     }
 

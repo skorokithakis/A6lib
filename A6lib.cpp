@@ -15,16 +15,6 @@
 #define TIMEOUT 3
 
 
-/* TODO:
- *
- * Read SMS: AT+CMGL="ALL"
- *
- * Check registration: AT+CREG?
- *
- * Check signal quality: AT+CSQ
- */
-
-
 /////////////////////////////////////////////
 // Public methods.
 //
@@ -67,16 +57,16 @@ void A6::begin(long baudRate) {
 }
 
 
-// Reboot the module by setting the specified pin LOW, then HIGH. The pin should
-// be connected to a MOSFET, it is not the A6's POWER rail.
+// Reboot the module by setting the specified pin HIGH, then LOW. The pin should
+// be connected to a P-MOSFET, not the A6's POWER pin.
 void A6::powerCycle(int pin) {
     logln("Power-cycling module...");
     pinMode(pin, OUTPUT);
-    digitalWrite(pin, LOW);
+    digitalWrite(pin, HIGH);
 
     delay(2000);
 
-    digitalWrite(pin, HIGH);
+    digitalWrite(pin, LOW);
 
     // Give the module some time to settle.
     delay(5000);

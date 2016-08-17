@@ -1,6 +1,8 @@
 # A6lib
 
 An ESP8266/Arduino library for communicating with the AI-Thinker A6 GSM module.
+It will probably also work with other GSM modules that use the AT command set,
+like the SIM900.
 
 ## Details
 

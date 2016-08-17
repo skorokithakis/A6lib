@@ -58,7 +58,7 @@ public:
     void hangUp();
     callInfo checkCallStatus();
 
-    void sendSMS(String number, String text);
+    byte sendSMS(String number, String text);
 
     void setVol(byte level);
     void enableSpeaker(byte enable);

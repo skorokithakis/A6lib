@@ -128,9 +128,14 @@ callInfo A6::checkCallStatus() {
 
 
 // Send an SMS.
-void A6::sendSMS(String number, String text) {
+byte A6::sendSMS(String number, String text) {
     char ctrlZ[2] = { 0x1a, 0x00 };
     char buffer[100];
+
+    if (text.length() > 159) {
+        // We can't send messages longer than 160 characters.
+        return NOTOK;
+    }
 
     log("Sending SMS to ");
     log(number);
@@ -142,6 +147,8 @@ void A6::sendSMS(String number, String text) {
     A6conn->println(text.c_str());
     A6conn->println(ctrlZ);
     A6conn->println();
+
+    return OK;
 }
 
 

@@ -15,9 +15,10 @@ void setup() {
 
 void loop() {
     callInfo cinfo = A6l.checkCallStatus();
-    if (cinfo.direction == DIR_INCOMING && cinfo.number == "1234567890")
-        A6l.answer();
-    else
+    if (cinfo.direction == DIR_INCOMING) {
+       if (cinfo.number == "1234567890")
+           A6l.sendSMS("1234567890", "I can't come to the phone right now, I'm a machine.");
         A6l.hangUp();
+    }
     delay(1000);
 }

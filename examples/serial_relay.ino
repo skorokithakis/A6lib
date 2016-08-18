@@ -14,10 +14,11 @@ void setup() {
 }
 
 void loop() {
-    callInfo cinfo = A6l.checkCallStatus();
-    if (cinfo.direction == DIR_INCOMING && cinfo.number == "1234567890")
-        A6l.answer();
-    else
-        A6l.hangUp();
-    delay(1000);
+    // Relay things between Serial and the module's SoftSerial.
+    while (A6l.A6conn->available() > 0) {
+        Serial.write(A6l.A6conn->read());
+    }
+    while (Serial.available() > 0) {
+        A6l.A6conn->write(Serial.read());
+    }
 }

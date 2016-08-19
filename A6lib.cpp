@@ -244,7 +244,7 @@ void A6::setRate(long baudRate) {
     // The rate is already the desired rate, return.
     if (rate == baudRate) return;
 
-    logln("Discovering baud rate...");
+    logln("Setting baud rate on the module...");
     // Change the rate to the requested.
     char buffer[30];
     sprintf(buffer, "AT+IPR=%d", baudRate);

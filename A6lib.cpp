@@ -278,7 +278,7 @@ byte A6::A6command(const char *command, const char *resp1, const char *resp2, in
         logln(command);
 
         A6conn->print(command);
-        A6conn->print("\r\n");
+        A6conn->print("\r");
 
         if (A6waitFor(resp1, resp2, timeout, response) == OK) {
             returnValue = OK;

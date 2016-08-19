@@ -14,6 +14,18 @@
 #define NOTOK 2
 #define TIMEOUT 3
 
+#define A6_CMD_TIMEOUT 2000
+
+
+/* TODO:
+ *
+ * Read SMS: AT+CMGL="ALL"
+ *
+ * Check registration: AT+CREG?
+ *
+ * Check signal quality: AT+CSQ
+ */
+
 
 /////////////////////////////////////////////
 // Public methods.
@@ -34,23 +46,23 @@ A6::~A6() {
 // default (autodetected) to the desired speed.
 void A6::begin(long baudRate) {
     // Give the module some time to settle.
-    delay(1000);
+    delay(12000);
 
     A6conn->flush();
 
     setRate(baudRate);
 
     // Factory reset.
-    A6command("AT&F", "OK", "yy", 5000, 2, NULL);
+    A6command("AT&F", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Echo off.
-    A6command("ATE0", "OK", "yy", 5000, 2, NULL);
+    A6command("ATE0", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Set caller ID on.
-    A6command("AT+CLIP=1", "OK", "yy", 5000, 2, NULL);
+    A6command("AT+CLIP=1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Set SMS to text mode.
-    A6command("AT+CMGF=1", "OK", "yy", 5000, 2, NULL);
+    A6command("AT+CMGF=1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Switch audio to headset.
     enableSpeaker(0);
@@ -61,15 +73,15 @@ void A6::begin(long baudRate) {
 // be connected to a P-MOSFET, not the A6's POWER pin.
 void A6::powerCycle(int pin) {
     logln("Power-cycling module...");
+
     pinMode(pin, OUTPUT);
-    digitalWrite(pin, HIGH);
-
-    delay(2000);
-
     digitalWrite(pin, LOW);
 
+    delay(1000);
+
+    digitalWrite(pin, HIGH);
+
     // Give the module some time to settle.
-    delay(5000);
     logln("Power-cycle done.");
 
     A6conn->flush();
@@ -83,26 +95,26 @@ void A6::dial(String number) {
     logln("Dialing number...");
 
     sprintf(buffer, "ATD%s;", number.c_str());
-    A6command(buffer, "OK", "yy", 5000, 2, NULL);
+    A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
 // Redial the last number.
 void A6::redial() {
     logln("Redialing last number...");
-    A6command("AT+DLST", "OK", "CONNECT", 5000, 2, NULL);
+    A6command("AT+DLST", "OK", "CONNECT", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
 // Answer a call.
 void A6::answer() {
-    A6command("ATA", "OK", "yy", 5000, 2, NULL);
+    A6command("ATA", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
 // Hang up the phone.
 void A6::hangUp() {
-    A6command("ATH", "OK", "yy", 5000, 2, NULL);
+    A6command("ATH", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
@@ -114,7 +126,7 @@ callInfo A6::checkCallStatus() {
     callInfo cinfo = (const struct callInfo){ 0 };
 
     // Issue the command and wait for the response.
-    A6command("AT+CLCC", "OK", "+CLCC", 5000, 2, &response);
+    A6command("AT+CLCC", "OK", "+CLCC", A6_CMD_TIMEOUT, 2, &response);
 
     // Parse the response if it contains a valid +CLCC.
     respStart = response.indexOf("+CLCC");
@@ -142,7 +154,7 @@ byte A6::sendSMS(String number, String text) {
     logln("...");
 
     sprintf(buffer, "AT+CMGS=\"%s\"", number.c_str());
-    A6command(buffer, ">", "yy", 5000, 2, NULL);
+    A6command(buffer, ">", "yy", A6_CMD_TIMEOUT, 2, NULL);
     delay(100);
     A6conn->println(text.c_str());
     A6conn->println(ctrlZ);
@@ -160,7 +172,7 @@ void A6::setVol(byte level) {
     // level should be between 5 and 8.
     level = min(max(level, 5), 8);
     sprintf(buffer, "AT+CLVL=%d", level);
-    A6command(buffer, "OK", "yy", 5000, 2, NULL);
+    A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
@@ -172,7 +184,7 @@ void A6::enableSpeaker(byte enable) {
     // enable should be between 0 and 1.
     enable = min(max(enable, 0), 1);
     sprintf(buffer, "AT+SNFS=%d", enable);
-    A6command(buffer, "OK", "yy", 5000, 2, NULL);
+    A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
@@ -244,7 +256,7 @@ void A6::setRate(long baudRate) {
     // Change the rate to the requested.
     char buffer[30];
     sprintf(buffer, "AT+IPR=%d", baudRate);
-    A6command(buffer, "OK", "+IPR=", 5000, 3, NULL);
+    A6command(buffer, "OK", "+IPR=", A6_CMD_TIMEOUT, 3, NULL);
 
     logln("Switching to the new rate...");
     // Begin the connection again at the requested rate.
@@ -274,7 +286,7 @@ byte A6::A6command(const char *command, const char *resp1, const char *resp2, in
         logln(command);
 
         A6conn->print(command);
-        A6conn->print("\r");
+        A6conn->print("\r\n");
 
         if (A6waitFor(resp1, resp2, timeout, response) == OK) {
             returnValue = OK;

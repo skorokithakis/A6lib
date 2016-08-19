@@ -17,16 +17,6 @@
 #define A6_CMD_TIMEOUT 2000
 
 
-/* TODO:
- *
- * Read SMS: AT+CMGL="ALL"
- *
- * Check registration: AT+CREG?
- *
- * Check signal quality: AT+CSQ
- */
-
-
 /////////////////////////////////////////////
 // Public methods.
 //
@@ -46,7 +36,9 @@ A6::~A6() {
 // default (autodetected) to the desired speed.
 void A6::begin(long baudRate) {
     // Give the module some time to settle.
+    println("Waiting for the module to initialize...");
     delay(12000);
+    println("Done.");
 
     A6conn->flush();
 
@@ -252,7 +244,7 @@ void A6::setRate(long baudRate) {
     // The rate is already the desired rate, return.
     if (rate == baudRate) return;
 
-    logln("Setting baud rate...");
+    logln("Discovering baud rate...");
     // Change the rate to the requested.
     char buffer[30];
     sprintf(buffer, "AT+IPR=%d", baudRate);

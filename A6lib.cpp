@@ -36,9 +36,9 @@ A6::~A6() {
 // default (autodetected) to the desired speed.
 void A6::begin(long baudRate) {
     // Give the module some time to settle.
-    println("Waiting for the module to initialize...");
+    logln("Waiting for the module to initialize...");
     delay(12000);
-    println("Done.");
+    logln("Done.");
 
     A6conn->flush();
 

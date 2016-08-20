@@ -37,7 +37,7 @@ A6::~A6() {
 void A6::begin(long baudRate) {
     // Give the module some time to settle.
     logln("Waiting for the module to initialize...");
-    delay(12000);
+    delay(20000);
     logln("Done.");
 
     A6conn->flush();
@@ -189,37 +189,12 @@ void A6::enableSpeaker(byte enable) {
 // Autodetect the connection rate.
 int A6::detectRate() {
     int rate = 0;
+    int rates[] = {115200, 9600, 1200, 2400, 4800, 19200, 38400, 57600};
 
     // Try to autodetect the rate.
     logln("Autodetecting connection rate...");
     for (int i = 0; i < 8; i++) {
-        switch (i) {
-        case 0:
-            // Try the usual rate first, to speed things up.
-            rate = 9600;
-            break;
-        case 1:
-            rate = 1200;
-            break;
-        case 2:
-            rate = 2400;
-            break;
-        case 3:
-            rate = 4800;
-            break;
-        case 4:
-            rate = 19200;
-            break;
-        case 5:
-            rate = 38400;
-            break;
-        case 6:
-            rate = 57600;
-            break;
-        case 7:
-            rate = 115200;
-            break;
-        }
+        rate = rates[i];
 
         A6conn->begin(rate);
         log("Trying rate ");
@@ -227,7 +202,7 @@ int A6::detectRate() {
         logln("...");
 
         delay(100);
-        if (A6command("AT", "OK", "OK", 2000, 2, NULL) == OK) {
+        if (A6command("\rAT", "OK", "+CME", 3000, 2, NULL) == OK) {
             return rate;
         }
     }

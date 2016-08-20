@@ -277,7 +277,7 @@ byte A6::A6waitFor(const char *resp1, const char *resp2, int timeout, String *re
     do {
         reply += read();
         yield();
-    } while ((reply.indexOf(resp1) + reply.indexOf(resp2) == -2) && ((millis() - entry) < timeout));
+    } while (((reply.indexOf(resp1) + reply.indexOf(resp2)) == -2) && ((millis() - entry) < timeout));
 
     if (reply != "") {
         log("Reply in ");

@@ -39,7 +39,7 @@ A6::~A6() {
 void A6::begin(long baudRate) {
     // Give the module some time to settle.
     logln("Waiting for the module to initialize...");
-    delay(20000);
+    delay(12000);
     logln("Done.");
 
     A6conn->flush();
@@ -191,7 +191,7 @@ void A6::enableSpeaker(byte enable) {
 // Autodetect the connection rate.
 int A6::detectRate() {
     int rate = 0;
-    int rates[] = {115200, 9600, 1200, 2400, 4800, 19200, 38400, 57600};
+    int rates[] = {9600, 115200, 4800, 19200, 38400, 57600};
 
     // Try to autodetect the rate.
     logln("Autodetecting connection rate...");
@@ -277,7 +277,7 @@ byte A6::A6waitFor(const char *resp1, const char *resp2, int timeout, String *re
     do {
         reply += read();
         yield();
-    } while ((reply.indexOf(resp1) + reply.indexOf(resp2) == -2) && millis() - entry < timeout);
+    } while ((reply.indexOf(resp1) + reply.indexOf(resp2) == -2) && ((millis() - entry) < timeout));
 
     if (reply != "") {
         log("Reply in ");

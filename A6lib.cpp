@@ -10,6 +10,8 @@
 #define logln(msg)
 #endif
 
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+
 #define OK 1
 #define NOTOK 2
 #define TIMEOUT 3
@@ -193,7 +195,7 @@ int A6::detectRate() {
 
     // Try to autodetect the rate.
     logln("Autodetecting connection rate...");
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < countof(rates); i++) {
         rate = rates[i];
 
         A6conn->begin(rate);
@@ -202,7 +204,7 @@ int A6::detectRate() {
         logln("...");
 
         delay(100);
-        if (A6command("\rAT", "OK", "+CME", 3000, 2, NULL) == OK) {
+        if (A6command("\r\r\rAT", "OK", "+CME", 2000, 2, NULL) == OK) {
             return rate;
         }
     }

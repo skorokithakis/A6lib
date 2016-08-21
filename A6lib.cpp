@@ -209,6 +209,10 @@ int A6::detectRate() {
         }
     }
 
+    // If we found nothing, reboot.
+    logln("Couldn't detect the rate.");
+    ESP.reset();
+
     // Return a default rate.
     return 9600;
 }

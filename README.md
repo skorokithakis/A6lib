@@ -32,7 +32,7 @@ A6 A6c(D6, D5);
 A6c.powerCycle(D0);
 
 // Start and place a call.
-A6c.begin(9600);
+A6c.blockUntilReady(9600);
 A6c.dial("1234567890");
 delay(8000);
 

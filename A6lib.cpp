@@ -73,24 +73,32 @@ char A6::begin(long baudRate) {
 void A6::powerCycle(int pin) {
     logln("Power-cycling module...");
 
-    pinMode(pin, OUTPUT);
-    digitalWrite(pin, LOW);
+    powerOff(pin);
 
     delay(1000);
 
-    digitalWrite(pin, HIGH);
+    powerOn(pin);
 
     // Give the module some time to settle.
-    logln("Power-cycle done.");
-
-    A6conn->flush();
-
-    // Give the module some time to settle.
-    logln("Waiting 20 seconds for the module to initialize...");
+    logln("Done, waiting for the module to initialize...");
     delay(20000);
     logln("Done.");
 
     A6conn->flush();
+}
+
+
+// Turn the modem power completely off.
+void A6::powerOff(int pin) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
+}
+
+
+// Turn the modem power on.
+void A6::powerOn(int pin) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, HIGH);
 }
 
 

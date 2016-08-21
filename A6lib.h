@@ -51,7 +51,10 @@ public:
 
     char begin(long baudRate);
     void blockUntilReady(long baudRate);
+
     void powerCycle(int pin);
+    void powerOn(int pin);
+    void powerOff(int pin);
 
     void dial(String number);
     void redial();

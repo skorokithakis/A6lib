@@ -49,7 +49,8 @@ public:
     A6(int transmitPin, int receivePin);
     ~A6();
 
-    void begin(long baudRate);
+    char begin(long baudRate);
+    void blockUntilReady(long baudRate);
     void powerCycle(int pin);
 
     void dial(String number);
@@ -68,7 +69,7 @@ private:
     String read();
     byte A6command(const char *command, const char *resp1, const char *resp2, int timeout, int repetitions, String *response);
     byte A6waitFor(const char *resp1, const char *resp2, int timeout, String *response);
-    int detectRate();
-    void setRate(long baudRate);
+    long detectRate();
+    char setRate(long baudRate);
 };
 #endif

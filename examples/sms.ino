@@ -10,7 +10,7 @@ void setup() {
 
     // Power-cycle the module to reset it.
     A6l.powerCycle(D0);
-    A6l.begin(9600);
+    A6l.blockUntilReady(9600);
 }
 
 void loop() {

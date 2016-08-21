@@ -12,9 +12,9 @@
 
 #define countof(a) (sizeof(a) / sizeof(a[0]))
 
-#define OK 1
-#define NOTOK 2
-#define TIMEOUT 3
+#define OK 0
+#define NOTOK 1
+#define TIMEOUT 2
 
 #define A6_CMD_TIMEOUT 2000
 
@@ -34,17 +34,22 @@ A6::~A6() {
 }
 
 
+// Block until the module is ready.
+void A6::blockUntilReady(long baudRate) {
+    while(0 != begin(baudRate)) {
+        delay(1000);
+        logln("Waiting for module to be ready...");
+    }
+}
+
+
 // Initialize the software serial connection and change the baud rate from the
 // default (autodetected) to the desired speed.
-void A6::begin(long baudRate) {
-    // Give the module some time to settle.
-    logln("Waiting 20 seconds for the module to initialize...");
-    delay(20000);
-    logln("Done.");
-
+char A6::begin(long baudRate) {
     A6conn->flush();
 
-    setRate(baudRate);
+    if (OK != setRate(baudRate))
+        return NOTOK;
 
     // Factory reset.
     A6command("AT&F", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
@@ -77,6 +82,13 @@ void A6::powerCycle(int pin) {
 
     // Give the module some time to settle.
     logln("Power-cycle done.");
+
+    A6conn->flush();
+
+    // Give the module some time to settle.
+    logln("Waiting 20 seconds for the module to initialize...");
+    delay(20000);
+    logln("Done.");
 
     A6conn->flush();
 }
@@ -189,9 +201,9 @@ void A6::enableSpeaker(byte enable) {
 
 
 // Autodetect the connection rate.
-int A6::detectRate() {
+long A6::detectRate() {
     int rate = 0;
-    int rates[] = {115200, 9600, 4800, 19200, 38400, 57600};
+    int rates[] = {9600, 115200};
 
     // Try to autodetect the rate.
     logln("Autodetecting connection rate...");
@@ -209,21 +221,21 @@ int A6::detectRate() {
         }
     }
 
-    // If we found nothing, reboot.
     logln("Couldn't detect the rate.");
-    ESP.reset();
-
-    // Return a default rate.
-    return 9600;
+    return NOTOK;
 }
 
 
 // Set the A6 baud rate.
-void A6::setRate(long baudRate) {
-    int rate = detectRate();
+char A6::setRate(long baudRate) {
+    int rate = 0;
+
+    rate = detectRate();
+    if (rate == NOTOK)
+        return NOTOK;
 
     // The rate is already the desired rate, return.
-    if (rate == baudRate) return;
+    //if (rate == baudRate) return OK;
 
     logln("Setting baud rate on the module...");
     // Change the rate to the requested.
@@ -235,6 +247,8 @@ void A6::setRate(long baudRate) {
     // Begin the connection again at the requested rate.
     A6conn->begin(baudRate);
     logln("Rate set.");
+
+    return OK;
 }
 
 

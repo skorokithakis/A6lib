@@ -66,8 +66,8 @@ char A6::begin(long baudRate) {
     // Set SMS to text mode.
     A6command("AT+CMGF=1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
-    // Set SMS indicators to on.
-    A6command("AT+CNMI=2,1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
+    // Turn SMS indicators off.
+    A6command("AT+CNMI=1,0", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Set SMS storage to the GSM modem.
     A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);

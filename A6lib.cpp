@@ -57,14 +57,23 @@ char A6::begin(long baudRate) {
     // Echo off.
     A6command("ATE0", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
+    // Switch audio to headset.
+    enableSpeaker(0);
+
     // Set caller ID on.
     A6command("AT+CLIP=1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Set SMS to text mode.
     A6command("AT+CMGF=1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
-    // Switch audio to headset.
-    enableSpeaker(0);
+    // Set SMS indicators to on.
+    A6command("AT+CNMI=2,1", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
+
+    // Set SMS storage to the GSM modem.
+    A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
+
+    // Set SMS character set.
+    setSMScharset("UCS2");
 }
 
 
@@ -175,6 +184,23 @@ byte A6::sendSMS(String number, String text) {
     A6conn->println();
 
     return OK;
+}
+
+
+// Delete the SMS at index.
+byte A6::deleteSMS(int index) {
+    char buffer[100];
+    sprintf(buffer, "AT+CMGD=%d", index);
+    return A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
+}
+
+
+// Set the SMS charset.
+byte A6::setSMScharset(String charset) {
+    char buffer[100];
+
+    sprintf(buffer, "AT+CSCS=\"%s\"", charset.c_str());
+    return A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 

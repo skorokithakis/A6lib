@@ -63,6 +63,8 @@ public:
     callInfo checkCallStatus();
 
     byte sendSMS(String number, String text);
+    byte deleteSMS(int index);
+    byte setSMScharset(String charset);
 
     void setVol(byte level);
     void enableSpeaker(byte enable);

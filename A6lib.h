@@ -55,8 +55,8 @@ public:
     A6(int transmitPin, int receivePin);
     ~A6();
 
-    char begin(long baudRate);
-    void blockUntilReady(long baudRate);
+    byte begin(long baudRate);
+    byte blockUntilReady(long baudRate);
 
     void powerCycle(int pin);
     void powerOn(int pin);

@@ -15,6 +15,7 @@
 #define OK 0
 #define NOTOK 1
 #define TIMEOUT 2
+#define FAILURE 3
 
 #define A6_CMD_TIMEOUT 2000
 
@@ -35,17 +36,23 @@ A6::~A6() {
 
 
 // Block until the module is ready.
-void A6::blockUntilReady(long baudRate) {
-    while(OK != begin(baudRate)) {
+byte A6::blockUntilReady(long baudRate) {
+    byte response = NOTOK;
+    while(OK != response) {
+        response = begin(baudRate);
+        // This means the modem has failed to initialize and we need to reboot
+        // it.
+        if (FAILURE == response) return FAILURE;
         delay(1000);
         logln("Waiting for module to be ready...");
     }
+    return OK;
 }
 
 
 // Initialize the software serial connection and change the baud rate from the
 // default (autodetected) to the desired speed.
-char A6::begin(long baudRate) {
+byte A6::begin(long baudRate) {
     A6conn->flush();
 
     if (OK != setRate(baudRate))
@@ -70,7 +77,10 @@ char A6::begin(long baudRate) {
     A6command("AT+CNMI=1,0", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Set SMS storage to the GSM modem.
-    A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
+    if (OK != A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL))
+        // This may sometimes fail, in which case the modem needs to be
+        // rebooted.
+        return FAILURE;
 
     // Set SMS character set.
     setSMScharset("UCS2");

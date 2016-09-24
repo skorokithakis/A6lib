@@ -28,11 +28,13 @@ The code looks something like this:
 the A6, i.e. connect the A6's Rx pin to D6).
 A6 A6c(D6, D5);
 
-// Power-cycle the module to reset it.
-A6c.powerCycle(D0);
+// Initialize the modem, rebooting it if it fails to become ready.
+do {
+    // Power-cycle the module to reset it.
+    A6c.powerCycle(D0);
+} while (A6c.blockUntilReady(9600) != OK);
 
 // Start and place a call.
-A6c.blockUntilReady(9600);
 A6c.dial("1234567890");
 delay(8000);
 

@@ -45,6 +45,12 @@ delay(8000);
 // Send a message.
 A6c.sendSMS("+1234567890", "Hello there!");
 
+// Get an SMS message from memory.
+SMSmessage sms = A6c.readSMS(3);
+
+// Delete an SMS message.
+A6c.deleteSMS(3);
+
 callInfo cinfo = A6c.checkCallStatus();
 // This will be the calling number, "1234567890".
 cinfo.number;

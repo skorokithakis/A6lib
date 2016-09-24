@@ -12,10 +12,10 @@
 
 #define countof(a) (sizeof(a) / sizeof(a[0]))
 
-#define OK 0
-#define NOTOK 1
-#define TIMEOUT 2
-#define FAILURE 3
+#define A6_OK 0
+#define A6_NOTOK 1
+#define A6_TIMEOUT 2
+#define A6_FAILURE 3
 
 #define A6_CMD_TIMEOUT 2000
 
@@ -37,16 +37,16 @@ A6::~A6() {
 
 // Block until the module is ready.
 byte A6::blockUntilReady(long baudRate) {
-    byte response = NOTOK;
-    while(OK != response) {
+    byte response = A6_NOTOK;
+    while(A6_OK != response) {
         response = begin(baudRate);
         // This means the modem has failed to initialize and we need to reboot
         // it.
-        if (FAILURE == response) return FAILURE;
+        if (A6_FAILURE == response) return A6_FAILURE;
         delay(1000);
         logln("Waiting for module to be ready...");
     }
-    return OK;
+    return A6_OK;
 }
 
 
@@ -55,8 +55,8 @@ byte A6::blockUntilReady(long baudRate) {
 byte A6::begin(long baudRate) {
     A6conn->flush();
 
-    if (OK != setRate(baudRate))
-        return NOTOK;
+    if (A6_OK != setRate(baudRate))
+        return A6_NOTOK;
 
     // Factory reset.
     A6command("AT&F", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
@@ -77,15 +77,15 @@ byte A6::begin(long baudRate) {
     A6command("AT+CNMI=1,0", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
     // Set SMS storage to the GSM modem.
-    if (OK != A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL))
+    if (A6_OK != A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL))
         // This may sometimes fail, in which case the modem needs to be
         // rebooted.
-        return FAILURE;
+        return A6_FAILURE;
 
     // Set SMS character set.
     setSMScharset("UCS2");
 
-    return OK;
+    return A6_OK;
 }
 
 
@@ -181,7 +181,7 @@ byte A6::sendSMS(String number, String text) {
 
     if (text.length() > 159) {
         // We can't send messages longer than 160 characters.
-        return NOTOK;
+        return A6_NOTOK;
     }
 
     log("Sending SMS to ");
@@ -195,7 +195,7 @@ byte A6::sendSMS(String number, String text) {
     A6conn->println(ctrlZ);
     A6conn->println();
 
-    return OK;
+    return A6_OK;
 }
 
 
@@ -318,13 +318,13 @@ long A6::detectRate() {
         logln("...");
 
         delay(100);
-        if (A6command("\rAT", "OK", "+CME", 2000, 2, NULL) == OK) {
+        if (A6command("\rAT", "OK", "+CME", 2000, 2, NULL) == A6_OK) {
             return rate;
         }
     }
 
     logln("Couldn't detect the rate.");
-    return NOTOK;
+    return A6_NOTOK;
 }
 
 
@@ -333,8 +333,8 @@ char A6::setRate(long baudRate) {
     int rate = 0;
 
     rate = detectRate();
-    if (rate == NOTOK)
-        return NOTOK;
+    if (rate == A6_NOTOK)
+        return A6_NOTOK;
 
     // The rate is already the desired rate, return.
     //if (rate == baudRate) return OK;
@@ -350,7 +350,7 @@ char A6::setRate(long baudRate) {
     A6conn->begin(baudRate);
     logln("Rate set.");
 
-    return OK;
+    return A6_OK;
 }
 
 
@@ -369,23 +369,23 @@ String A6::read() {
 
 // Issue a command.
 byte A6::A6command(const char *command, const char *resp1, const char *resp2, int timeout, int repetitions, String *response) {
-    byte returnValue = NOTOK;
+    byte returnValue = A6_NOTOK;
     byte count = 0;
 
     // Get rid of any buffered output.
     A6conn->flush();
 
-    while (count < repetitions && returnValue != OK) {
+    while (count < repetitions && returnValue != A6_OK) {
         log("Issuing command: ");
         logln(command);
 
         A6conn->write(command);
         A6conn->write('\r');
 
-        if (A6waitFor(resp1, resp2, timeout, response) == OK) {
-            returnValue = OK;
+        if (A6waitFor(resp1, resp2, timeout, response) == A6_OK) {
+            returnValue = A6_OK;
         } else {
-            returnValue = NOTOK;
+            returnValue = A6_NOTOK;
         }
         count++;
     }
@@ -414,15 +414,15 @@ byte A6::A6waitFor(const char *resp1, const char *resp2, int timeout, String *re
     if (response != NULL) *response = reply;
 
     if ((millis() - entry) >= timeout) {
-        retVal = TIMEOUT;
+        retVal = A6_TIMEOUT;
         logln("Timed out.");
     } else {
         if (reply.indexOf(resp1) + reply.indexOf(resp2) > -2) {
             logln("Reply OK.");
-            retVal = OK;
+            retVal = A6_OK;
         } else {
             logln("Reply NOT OK.");
-            retVal = NOTOK;
+            retVal = A6_NOTOK;
         }
     }
     return retVal;

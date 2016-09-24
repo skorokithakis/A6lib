@@ -32,7 +32,7 @@ A6 A6c(D6, D5);
 do {
     // Power-cycle the module to reset it.
     A6c.powerCycle(D0);
-} while (A6c.blockUntilReady(9600) != OK);
+} while (A6c.blockUntilReady(9600) != A6_OK);
 
 // Start and place a call.
 A6c.dial("1234567890");

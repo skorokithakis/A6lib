@@ -3,6 +3,10 @@
 // Instantiate the library with TxPin, RxPin.
 A6 A6l(D6, D5);
 
+int unreadSMSLocs[30] = {0};
+int unreadSMSNum = 0;
+SMSmessage sms;
+
 void setup() {
     Serial.begin(115200);
 
@@ -20,5 +24,19 @@ void loop() {
            A6l.sendSMS("1234567890", "I can't come to the phone right now, I'm a machine.");
         A6l.hangUp();
     }
+
+    // Get the memory locations of unread SMS messages.
+    unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 30);
+
+    for (int i=0; i < unreadSMSNum; i++) {
+        Serial.print("New message at index: ");
+        Serial.println(unreadSMSLocs[i], DEC);
+
+        sms = A6l.readSMS(unreadSMSLocs[i]);
+        Serial.println(sms.number);
+        Serial.println(sms.date);
+        Serial.println(sms.message);
+    }
+
     delay(1000);
 }

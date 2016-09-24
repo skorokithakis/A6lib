@@ -33,6 +33,12 @@ enum call_mode {
     MODE_UNKNOWN = 9
 };
 
+struct SMSmessage {
+    String number;
+    String date;
+    String message;
+};
+
 struct callInfo {
     int index;
     call_direction direction;
@@ -63,6 +69,8 @@ public:
     callInfo checkCallStatus();
 
     byte sendSMS(String number, String text);
+    int getUnreadSMSLocs(int* buf, int maxItems);
+    SMSmessage readSMS(int index);
     byte deleteSMS(int index);
     byte setSMScharset(String charset);
 

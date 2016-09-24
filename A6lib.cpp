@@ -36,7 +36,7 @@ A6::~A6() {
 
 // Block until the module is ready.
 void A6::blockUntilReady(long baudRate) {
-    while(0 != begin(baudRate)) {
+    while(OK != begin(baudRate)) {
         delay(1000);
         logln("Waiting for module to be ready...");
     }
@@ -74,6 +74,8 @@ char A6::begin(long baudRate) {
 
     // Set SMS character set.
     setSMScharset("UCS2");
+
+    return OK;
 }
 
 
@@ -187,9 +189,65 @@ byte A6::sendSMS(String number, String text) {
 }
 
 
+// Retrieve the number and locations of unread SMS messages.
+int A6::getUnreadSMSLocs(int* buf, int maxItems) {
+    String seqStart= "+CMGL: ";
+    String response = "";
+
+    // Issue the command and wait for the response.
+    byte status = A6command("AT+CMGL=\"REC UNREAD\"", "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
+
+    int seqStartLen = seqStart.length();
+    int responseLen = response.length();
+    int index, occurrences = 0;
+
+    // Start looking for the +CMGL string.
+    for (int i = 0; i < (responseLen - seqStartLen); i++) {
+        // If we found a response and it's less than occurrences, add it.
+        if (response.substring(i, i + seqStartLen) == seqStart && occurrences < maxItems) {
+            // Parse the position out of the reply.
+            sscanf(response.substring(i, i+12).c_str(), "+CMGL: %u,%*s", &index);
+
+            buf[occurrences] = index;
+            occurrences++;
+        }
+    }
+    return occurrences;
+}
+
+
+// Return the SMS at index.
+SMSmessage A6::readSMS(int index) {
+    String response = "";
+    char buffer[30];
+
+    // Issue the command and wait for the response.
+    sprintf(buffer, "AT+CMGR=%d", index);
+    A6command(buffer, "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
+
+    char message[200];
+    char number[50];
+    char date[50];
+    char type[10];
+    int respStart = 0, matched = 0;
+    SMSmessage sms = (const struct SMSmessage){ "", "", "" };
+
+    // Parse the response if it contains a valid +CLCC.
+    respStart = response.indexOf("+CMGR");
+    if (respStart >= 0) {
+        // Parse the message header.
+        matched = sscanf(response.substring(respStart).c_str(), "+CMGR: \"REC %s\",\"%s\",,\"%s\"\r\n", type, number, date);
+        sms.number = String(number);
+        sms.date = String(date);
+        // The rest is the message, extract it.
+        sms.message = response.substring(strlen(type) + strlen(number) + strlen(date) + 24, response.length() - 8);
+    }
+    return sms;
+}
+
 // Delete the SMS at index.
 byte A6::deleteSMS(int index) {
-    char buffer[100];
+    char buffer[20];
     sprintf(buffer, "AT+CMGD=%d", index);
     return A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
@@ -197,7 +255,7 @@ byte A6::deleteSMS(int index) {
 
 // Set the SMS charset.
 byte A6::setSMScharset(String charset) {
-    char buffer[100];
+    char buffer[30];
 
     sprintf(buffer, "AT+CSCS=\"%s\"", charset.c_str());
     return A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
@@ -290,6 +348,11 @@ char A6::setRate(long baudRate) {
 String A6::read() {
     String reply = "";
     if (A6conn->available()) reply = A6conn->readString();
+
+    // XXX: Replace NULs with \xff so we can match on them.
+    for (int x = 0; x < reply.length(); x++) {
+        if (reply.charAt(x) == 0) reply.setCharAt(x, 255);
+    }
     return reply;
 }
 

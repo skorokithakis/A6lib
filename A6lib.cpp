@@ -96,7 +96,7 @@ void A6::powerCycle(int pin) {
 
     powerOff(pin);
 
-    delay(1000);
+    delay(2000);
 
     powerOn(pin);
 

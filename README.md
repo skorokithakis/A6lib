@@ -18,6 +18,9 @@ The example assumes the TX pin is connected to D5 and the RX to D6. A6lib can
 power-cycle the module if you connect a MOSFET to a pin and control the A6's
 power supply with it.
 
+For a sample circuit that uses this library, have a look at [the A6/ESP8266
+breakout board](https://gitlab.com/stavros/A6-ESP8266-breakout/) I designed.
+
 The A6's PWR pin should be permanently connected to Vcc (if you think that's
 wrong or know a better way, please open an issue).
 

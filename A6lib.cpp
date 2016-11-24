@@ -24,19 +24,19 @@
 // Public methods.
 //
 
-A6::A6(int transmitPin, int receivePin) {
+A6lib::A6lib(int transmitPin, int receivePin) {
     A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
     A6conn->setTimeout(100);
 }
 
 
-A6::~A6() {
+A6lib::~A6lib() {
     delete A6conn;
 }
 
 
 // Block until the module is ready.
-byte A6::blockUntilReady(long baudRate) {
+byte A6lib::blockUntilReady(long baudRate) {
     byte response = A6_NOTOK;
     while(A6_OK != response) {
         response = begin(baudRate);
@@ -52,7 +52,7 @@ byte A6::blockUntilReady(long baudRate) {
 
 // Initialize the software serial connection and change the baud rate from the
 // default (autodetected) to the desired speed.
-byte A6::begin(long baudRate) {
+byte A6lib::begin(long baudRate) {
     A6conn->flush();
 
     if (A6_OK != setRate(baudRate))
@@ -91,7 +91,7 @@ byte A6::begin(long baudRate) {
 
 // Reboot the module by setting the specified pin HIGH, then LOW. The pin should
 // be connected to a P-MOSFET, not the A6's POWER pin.
-void A6::powerCycle(int pin) {
+void A6lib::powerCycle(int pin) {
     logln("Power-cycling module...");
 
     powerOff(pin);
@@ -110,21 +110,21 @@ void A6::powerCycle(int pin) {
 
 
 // Turn the modem power completely off.
-void A6::powerOff(int pin) {
+void A6lib::powerOff(int pin) {
     pinMode(pin, OUTPUT);
     digitalWrite(pin, LOW);
 }
 
 
 // Turn the modem power on.
-void A6::powerOn(int pin) {
+void A6lib::powerOn(int pin) {
     pinMode(pin, OUTPUT);
     digitalWrite(pin, HIGH);
 }
 
 
 // Dial a number.
-void A6::dial(String number) {
+void A6lib::dial(String number) {
     char buffer[50];
 
     logln("Dialing number...");
@@ -135,26 +135,26 @@ void A6::dial(String number) {
 
 
 // Redial the last number.
-void A6::redial() {
+void A6lib::redial() {
     logln("Redialing last number...");
     A6command("AT+DLST", "OK", "CONNECT", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
 // Answer a call.
-void A6::answer() {
+void A6lib::answer() {
     A6command("ATA", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
 // Hang up the phone.
-void A6::hangUp() {
+void A6lib::hangUp() {
     A6command("ATH", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
 
 // Check whether there is an active call.
-callInfo A6::checkCallStatus() {
+callInfo A6lib::checkCallStatus() {
     char number[50];
     String response = "";
     int respStart = 0, matched = 0;
@@ -175,7 +175,7 @@ callInfo A6::checkCallStatus() {
 
 
 // Send an SMS.
-byte A6::sendSMS(String number, String text) {
+byte A6lib::sendSMS(String number, String text) {
     char ctrlZ[2] = { 0x1a, 0x00 };
     char buffer[100];
 
@@ -200,7 +200,7 @@ byte A6::sendSMS(String number, String text) {
 
 
 // Retrieve the number and locations of unread SMS messages.
-int A6::getUnreadSMSLocs(int* buf, int maxItems) {
+int A6lib::getUnreadSMSLocs(int* buf, int maxItems) {
     String seqStart= "+CMGL: ";
     String response = "";
 
@@ -227,7 +227,7 @@ int A6::getUnreadSMSLocs(int* buf, int maxItems) {
 
 
 // Return the SMS at index.
-SMSmessage A6::readSMS(int index) {
+SMSmessage A6lib::readSMS(int index) {
     String response = "";
     char buffer[30];
 
@@ -256,7 +256,7 @@ SMSmessage A6::readSMS(int index) {
 }
 
 // Delete the SMS at index.
-byte A6::deleteSMS(int index) {
+byte A6lib::deleteSMS(int index) {
     char buffer[20];
     sprintf(buffer, "AT+CMGD=%d", index);
     return A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
@@ -264,7 +264,7 @@ byte A6::deleteSMS(int index) {
 
 
 // Set the SMS charset.
-byte A6::setSMScharset(String charset) {
+byte A6lib::setSMScharset(String charset) {
     char buffer[30];
 
     sprintf(buffer, "AT+CSCS=\"%s\"", charset.c_str());
@@ -274,7 +274,7 @@ byte A6::setSMScharset(String charset) {
 
 // Set the volume for the speaker. level should be a number between 5 and
 // 8 inclusive.
-void A6::setVol(byte level) {
+void A6lib::setVol(byte level) {
     char buffer[30];
 
     // level should be between 5 and 8.
@@ -286,7 +286,7 @@ void A6::setVol(byte level) {
 
 // Enable the speaker, rather than the headphones. Pass 0 to route audio through
 // headphones, 1 through speaker.
-void A6::enableSpeaker(byte enable) {
+void A6lib::enableSpeaker(byte enable) {
     char buffer[30];
 
     // enable should be between 0 and 1.
@@ -303,7 +303,7 @@ void A6::enableSpeaker(byte enable) {
 
 
 // Autodetect the connection rate.
-long A6::detectRate() {
+long A6lib::detectRate() {
     int rate = 0;
     int rates[] = {9600, 115200};
 
@@ -329,7 +329,7 @@ long A6::detectRate() {
 
 
 // Set the A6 baud rate.
-char A6::setRate(long baudRate) {
+char A6lib::setRate(long baudRate) {
     int rate = 0;
 
     rate = detectRate();
@@ -355,7 +355,7 @@ char A6::setRate(long baudRate) {
 
 
 // Read some data from the A6 in a non-blocking manner.
-String A6::read() {
+String A6lib::read() {
     String reply = "";
     if (A6conn->available()) reply = A6conn->readString();
 
@@ -368,7 +368,7 @@ String A6::read() {
 
 
 // Issue a command.
-byte A6::A6command(const char *command, const char *resp1, const char *resp2, int timeout, int repetitions, String *response) {
+byte A6lib::A6command(const char *command, const char *resp1, const char *resp2, int timeout, int repetitions, String *response) {
     byte returnValue = A6_NOTOK;
     byte count = 0;
 
@@ -394,7 +394,7 @@ byte A6::A6command(const char *command, const char *resp1, const char *resp2, in
 
 
 // Wait for responses.
-byte A6::A6waitFor(const char *resp1, const char *resp2, int timeout, String *response) {
+byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String *response) {
     unsigned long entry = millis();
     int count = 0;
     String reply = "";

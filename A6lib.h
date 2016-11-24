@@ -50,10 +50,10 @@ struct callInfo {
 };
 
 
-class A6 {
+class A6lib {
 public:
-    A6(int transmitPin, int receivePin);
-    ~A6();
+    A6lib(int transmitPin, int receivePin);
+    ~A6lib();
 
     byte begin(long baudRate);
     byte blockUntilReady(long baudRate);

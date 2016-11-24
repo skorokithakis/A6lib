@@ -29,7 +29,7 @@ The code looks something like this:
 ~~~
 // Instantiate the class with Tx, Rx (remember to swap them when connecting to
 the A6, i.e. connect the A6's Rx pin to D6).
-A6 A6c(D6, D5);
+A6lib A6c(D6, D5);
 
 // Initialize the modem, rebooting it if it fails to become ready.
 do {

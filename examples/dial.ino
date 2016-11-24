@@ -1,7 +1,7 @@
 #include <A6lib.h>
 
 // Instantiate the library with TxPin, RxPin.
-A6 A6l(D6, D5);
+A6lib A6l(D6, D5);
 
 void setup() {
     Serial.begin(115200);

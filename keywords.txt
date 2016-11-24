@@ -7,7 +7,7 @@
 # Datatypes (KEYWORD1)
 #######################################
 
-A6                     KEYWORD1
+A6lib                  KEYWORD1
 callInfo               KEYWORD1
 
 #######################################

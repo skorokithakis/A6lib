@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "SoftwareSerial.h"
+#include <SoftwareSerial.h>
 #include "A6lib.h"
 
 #ifdef DEBUG
@@ -25,7 +25,8 @@
 //
 
 A6lib::A6lib(int transmitPin, int receivePin) {
-    A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
+    A6conn = new SoftwareSerial(receivePin, transmitPin, false);
+//    A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
     A6conn->setTimeout(100);
 }
 
@@ -37,6 +38,7 @@ A6lib::~A6lib() {
 
 // Block until the module is ready.
 byte A6lib::blockUntilReady(long baudRate) {
+
     byte response = A6_NOTOK;
     while(A6_OK != response) {
         response = begin(baudRate);
@@ -53,6 +55,9 @@ byte A6lib::blockUntilReady(long baudRate) {
 // Initialize the software serial connection and change the baud rate from the
 // default (autodetected) to the desired speed.
 byte A6lib::begin(long baudRate) {
+
+	log("baud rate:\t");
+	logln(baudRate);
     A6conn->flush();
 
     if (A6_OK != setRate(baudRate))
@@ -169,6 +174,16 @@ callInfo A6lib::checkCallStatus() {
         matched = sscanf(response.substring(respStart).c_str(), "+CLCC: %d,%d,%d,%d,%d,\"%s\",%d", &cinfo.index, &cinfo.direction, &cinfo.state, &cinfo.mode, &cinfo.multiparty, number, &cinfo.type);
         cinfo.number = String(number);
     }
+        log("cinfo number\t");
+        logln(cinfo.number);
+
+        int comma_index=cinfo.number.indexOf('"');
+        if(comma_index!=-1)
+        	{
+        		logln("extra comma found");
+        		cinfo.number=cinfo.number.substring(0,comma_index);
+        		logln(cinfo.number);
+        	}
 
     return cinfo;
 }
@@ -303,9 +318,10 @@ void A6lib::enableSpeaker(byte enable) {
 
 
 // Autodetect the connection rate.
+
 long A6lib::detectRate() {
-    int rate = 0;
-    int rates[] = {9600, 115200};
+    unsigned long rate = 0;
+    unsigned long rates[] = {9600, 115200};
 
     // Try to autodetect the rate.
     logln("Autodetecting connection rate...");
@@ -324,6 +340,7 @@ long A6lib::detectRate() {
     }
 
     logln("Couldn't detect the rate.");
+
     return A6_NOTOK;
 }
 
@@ -340,9 +357,10 @@ char A6lib::setRate(long baudRate) {
     //if (rate == baudRate) return OK;
 
     logln("Setting baud rate on the module...");
+
     // Change the rate to the requested.
     char buffer[30];
-    sprintf(buffer, "AT+IPR=%d", baudRate);
+    sprintf(buffer, "AT+IPR=%d\n\r", baudRate);
     A6command(buffer, "OK", "+IPR=", A6_CMD_TIMEOUT, 3, NULL);
 
     logln("Switching to the new rate...");

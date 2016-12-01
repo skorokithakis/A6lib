@@ -1,7 +1,7 @@
 #include <A6lib.h>
 
 // Instantiate the library with TxPin, RxPin.
-A6lib A6l(D6, D5);
+A6lib A6l(7, 8);
 
 void setup() {
     Serial.begin(115200);
@@ -9,7 +9,7 @@ void setup() {
     delay(1000);
 
     // Power-cycle the module to reset it.
-    A6l.powerCycle(D0);
+    // A6l.powerCycle(0);
     A6l.blockUntilReady(9600);
 }
 

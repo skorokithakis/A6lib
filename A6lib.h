@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "SoftwareSerial.h"
 
+#define DEBUG
 
 enum call_direction {
     DIR_OUTGOING = 0,

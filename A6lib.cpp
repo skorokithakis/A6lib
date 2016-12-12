@@ -26,7 +26,6 @@
 
 A6lib::A6lib(int transmitPin, int receivePin) {
     A6conn = new SoftwareSerial(receivePin, transmitPin, false);
-//    A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
     A6conn->setTimeout(100);
 }
 
@@ -360,7 +359,7 @@ char A6lib::setRate(long baudRate) {
 
     // Change the rate to the requested.
     char buffer[30];
-    sprintf(buffer, "AT+IPR=%d\n\r", baudRate);
+    sprintf(buffer, "AT+IPR=%d", baudRate);
     A6command(buffer, "OK", "+IPR=", A6_CMD_TIMEOUT, 3, NULL);
 
     logln("Switching to the new rate...");

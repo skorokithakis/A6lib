@@ -9,7 +9,7 @@ void setup() {
     delay(1000);
 
     // Power-cycle the module to reset it.
- //   A6l.powerCycle(D0);
+    A6l.powerCycle(D0);
     A6l.blockUntilReady(9600);
 }
 
@@ -23,7 +23,7 @@ void loop() {
     
     if(cinfo.number!=NULL)
     {
-      if (cinfo.direction == DIR_INCOMING && cinfo.number == "919810601848")
+      if (cinfo.direction == DIR_INCOMING && cinfo.number == "919999999999")
           A6l.answer();
       else
           A6l.hangUp();

@@ -9,7 +9,7 @@ void setup() {
     delay(1000);
 
     // Power-cycle the module to reset it.
-    // A6l.powerCycle(0);
+    A6l.powerCycle(0);
     A6l.blockUntilReady(9600);
 }
 

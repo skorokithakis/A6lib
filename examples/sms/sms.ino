@@ -17,14 +17,14 @@ void setup() {
     delay(1000);
 
     // Power-cycle the module to reset it.
- //   A6l.powerCycle(D0);
+    A6l.powerCycle(D0);
     A6l.blockUntilReady(9600);
 }
 
 void loop() {
     callInfo cinfo = A6l.checkCallStatus();
     if (cinfo.direction == DIR_INCOMING) {
-       if (cinfo.number == "919810601848")
+       if (cinfo.number == "919999999999")
         {
           //add + before your country code as it doesn't appear in the if messages don't get send ex-
           // CLIP: "91**********",145,,,,1
@@ -36,8 +36,6 @@ void loop() {
     }
 
     // Get the memory locations of unread SMS messages.
-
-    /*
     unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 30);
 
     for (int i=0; i < unreadSMSNum; i++) {
@@ -49,6 +47,5 @@ void loop() {
         Serial.println(sms.date);
         Serial.println(sms.message);
     }
-    */
     delay(1000);
 }

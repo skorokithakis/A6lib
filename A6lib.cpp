@@ -2,30 +2,16 @@
 #include <SoftwareSerial.h>
 #include "A6lib.h"
 
-#ifdef DEBUG
-#define log(msg) Serial.print(msg)
-#define logln(msg) Serial.println(msg)
-#else
-#define log(msg)
-#define logln(msg)
-#endif
-
-#define countof(a) (sizeof(a) / sizeof(a[0]))
-
-#define A6_OK 0
-#define A6_NOTOK 1
-#define A6_TIMEOUT 2
-#define A6_FAILURE 3
-
-#define A6_CMD_TIMEOUT 2000
-
 
 /////////////////////////////////////////////
 // Public methods.
 //
 
 A6lib::A6lib(int transmitPin, int receivePin) {
-    A6conn = new SoftwareSerial(receivePin, transmitPin, false);
+    #ifdef ESP8266
+    	A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
+    #else
+	A6conn = new SoftwareSerial(receivePin, transmitPin, false);
     A6conn->setTimeout(100);
 }
 

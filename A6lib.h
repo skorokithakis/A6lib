@@ -4,6 +4,23 @@
 #include <Arduino.h>
 #include "SoftwareSerial.h"
 
+#ifdef DEBUG
+#define log(msg) Serial.print(msg)
+#define logln(msg) Serial.println(msg)
+#else
+#define log(msg)
+#define logln(msg)
+#endif
+
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+
+#define A6_OK 0
+#define A6_NOTOK 1
+#define A6_TIMEOUT 2
+#define A6_FAILURE 3
+
+#define A6_CMD_TIMEOUT 2000
+
 
 enum call_direction {
     DIR_OUTGOING = 0,

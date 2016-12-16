@@ -27,13 +27,7 @@ void loop() {
     callInfo cinfo = A6l.checkCallStatus();
     if (cinfo.direction == DIR_INCOMING) {
        if (cinfo.number == "919999999999")
-        {
-          //add + before your country code as it doesn't appear in the if messages don't get send ex-
-          // CLIP: "91**********",145,,,,1
-          // String new_number="+" + cinfo.number;
-          // Serial.println(new_number);
            A6l.sendSMS(new_number, "I can't come to the phone right now, I'm a machine.");
-        }
         A6l.hangUp();
     }
 

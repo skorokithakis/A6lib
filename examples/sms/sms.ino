@@ -26,22 +26,23 @@ void setup() {
 void loop() {
     callInfo cinfo = A6l.checkCallStatus();
     if (cinfo.direction == DIR_INCOMING) {
-       if (cinfo.number == "919999999999")
-           A6l.sendSMS(new_number, "I can't come to the phone right now, I'm a machine.");
-        A6l.hangUp();
+        if ("+1132352890".endsWith(cinfo.number)) {
+            // If the number that sent the SMS is ours, reply.
+            A6l.sendSMS(new_number, "I can't come to the phone right now, I'm a machine.");
+            A6l.hangUp();
+        }
+
+        // Get the memory locations of unread SMS messages.
+        unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 30);
+
+        for (int i = 0; i < unreadSMSNum; i++) {
+            Serial.print("New message at index: ");
+            Serial.println(unreadSMSLocs[i], DEC);
+
+            sms = A6l.readSMS(unreadSMSLocs[i]);
+            Serial.println(sms.number);
+            Serial.println(sms.date);
+            Serial.println(sms.message);
+        }
+        delay(1000);
     }
-
-    // Get the memory locations of unread SMS messages.
-    unreadSMSNum = A6l.getUnreadSMSLocs(unreadSMSLocs, 30);
-
-    for (int i=0; i < unreadSMSNum; i++) {
-        Serial.print("New message at index: ");
-        Serial.println(unreadSMSLocs[i], DEC);
-
-        sms = A6l.readSMS(unreadSMSLocs[i]);
-        Serial.println(sms.number);
-        Serial.println(sms.date);
-        Serial.println(sms.message);
-    }
-    delay(1000);
-}

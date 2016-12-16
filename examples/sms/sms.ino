@@ -1,11 +1,13 @@
 #include <A6lib.h>
 
-// Instantiate the library with TxPin, RxPin.
-A6lib A6l(7, 8);
-//tx and rx pins are opposite side to antenna as of today's date.
-//arduino pin 7 to pin 9 of A6
-//arduino pin 8 to pin 8 of A6
+#ifndef ESP8266
+#define D0 0
+#define D5 8
+#define D6 7
+#endif
 
+// Instantiate the library with TxPin, RxPin.
+A6lib A6l(D6, D5);
 
 int unreadSMSLocs[30] = {0};
 int unreadSMSNum = 0;

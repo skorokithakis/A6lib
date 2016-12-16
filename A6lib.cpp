@@ -8,12 +8,12 @@
 //
 
 A6lib::A6lib(int transmitPin, int receivePin) {
-    #ifdef ESP8266
-    	A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
-    #else
-	A6conn = new SoftwareSerial(receivePin, transmitPin, false);
-    #endif
-	A6conn->setTimeout(100);
+#ifdef ESP8266
+    A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
+#else
+    A6conn = new SoftwareSerial(receivePin, transmitPin, false);
+#endif
+    A6conn->setTimeout(100);
 }
 
 
@@ -26,11 +26,13 @@ A6lib::~A6lib() {
 byte A6lib::blockUntilReady(long baudRate) {
 
     byte response = A6_NOTOK;
-    while(A6_OK != response) {
+    while (A6_OK != response) {
         response = begin(baudRate);
         // This means the modem has failed to initialize and we need to reboot
         // it.
-        if (A6_FAILURE == response) return A6_FAILURE;
+        if (A6_FAILURE == response) {
+            return A6_FAILURE;
+        }
         delay(1000);
         logln("Waiting for module to be ready...");
     }
@@ -42,12 +44,11 @@ byte A6lib::blockUntilReady(long baudRate) {
 // default (autodetected) to the desired speed.
 byte A6lib::begin(long baudRate) {
 
-	log("baud rate:\t");
-	logln(baudRate);
     A6conn->flush();
 
-    if (A6_OK != setRate(baudRate))
+    if (A6_OK != setRate(baudRate)) {
         return A6_NOTOK;
+    }
 
     // Factory reset.
     A6command("AT&F", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
@@ -71,7 +72,9 @@ byte A6lib::begin(long baudRate) {
     if (A6_OK != A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL))
         // This may sometimes fail, in which case the modem needs to be
         // rebooted.
+    {
         return A6_FAILURE;
+    }
 
     // Set SMS character set.
     setSMScharset("UCS2");
@@ -148,8 +151,10 @@ void A6lib::hangUp() {
 callInfo A6lib::checkCallStatus() {
     char number[50];
     String response = "";
-    int respStart = 0, matched = 0;
-    callInfo cinfo = (const struct callInfo){ 0 };
+    uint32_t respStart = 0, matched = 0;
+    callInfo cinfo = (const struct callInfo) {
+        0
+    };
 
     // Issue the command and wait for the response.
     A6command("AT+CLCC", "OK", "+CLCC", A6_CMD_TIMEOUT, 2, &response);
@@ -160,16 +165,12 @@ callInfo A6lib::checkCallStatus() {
         matched = sscanf(response.substring(respStart).c_str(), "+CLCC: %d,%d,%d,%d,%d,\"%s\",%d", &cinfo.index, &cinfo.direction, &cinfo.state, &cinfo.mode, &cinfo.multiparty, number, &cinfo.type);
         cinfo.number = String(number);
     }
-        log("cinfo number\t");
-        logln(cinfo.number);
 
-        int comma_index=cinfo.number.indexOf('"');
-        if(comma_index!=-1)
-        	{
-        		logln("extra comma found");
-        		cinfo.number=cinfo.number.substring(0,comma_index);
-        		logln(cinfo.number);
-        	}
+    uint8_t comma_index = cinfo.number.indexOf('"');
+    if (comma_index != -1) {
+        logln("Extra comma found.");
+        cinfo.number = cinfo.number.substring(0, comma_index);
+    }
 
     return cinfo;
 }
@@ -202,7 +203,7 @@ byte A6lib::sendSMS(String number, String text) {
 
 // Retrieve the number and locations of unread SMS messages.
 int A6lib::getUnreadSMSLocs(int* buf, int maxItems) {
-    String seqStart= "+CMGL: ";
+    String seqStart = "+CMGL: ";
     String response = "";
 
     // Issue the command and wait for the response.
@@ -217,7 +218,7 @@ int A6lib::getUnreadSMSLocs(int* buf, int maxItems) {
         // If we found a response and it's less than occurrences, add it.
         if (response.substring(i, i + seqStartLen) == seqStart && occurrences < maxItems) {
             // Parse the position out of the reply.
-            sscanf(response.substring(i, i+12).c_str(), "+CMGL: %u,%*s", &index);
+            sscanf(response.substring(i, i + 12).c_str(), "+CMGL: %u,%*s", &index);
 
             buf[occurrences] = index;
             occurrences++;
@@ -241,7 +242,9 @@ SMSmessage A6lib::readSMS(int index) {
     char date[50];
     char type[10];
     int respStart = 0, matched = 0;
-    SMSmessage sms = (const struct SMSmessage){ "", "", "" };
+    SMSmessage sms = (const struct SMSmessage) {
+        "", "", ""
+    };
 
     // Parse the response if it contains a valid +CLCC.
     respStart = response.indexOf("+CMGR");
@@ -336,8 +339,9 @@ char A6lib::setRate(long baudRate) {
     int rate = 0;
 
     rate = detectRate();
-    if (rate == A6_NOTOK)
+    if (rate == A6_NOTOK) {
         return A6_NOTOK;
+    }
 
     // The rate is already the desired rate, return.
     //if (rate == baudRate) return OK;
@@ -361,11 +365,15 @@ char A6lib::setRate(long baudRate) {
 // Read some data from the A6 in a non-blocking manner.
 String A6lib::read() {
     String reply = "";
-    if (A6conn->available()) reply = A6conn->readString();
+    if (A6conn->available()) {
+        reply = A6conn->readString();
+    }
 
     // XXX: Replace NULs with \xff so we can match on them.
     for (int x = 0; x < reply.length(); x++) {
-        if (reply.charAt(x) == 0) reply.setCharAt(x, 255);
+        if (reply.charAt(x) == 0) {
+            reply.setCharAt(x, 255);
+        }
     }
     return reply;
 }
@@ -415,7 +423,9 @@ byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String 
         logln(reply);
     }
 
-    if (response != NULL) *response = reply;
+    if (response != NULL) {
+        *response = reply;
+    }
 
     if ((millis() - entry) >= timeout) {
         retVal = A6_TIMEOUT;

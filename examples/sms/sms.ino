@@ -1,7 +1,11 @@
 #include <A6lib.h>
 
 // Instantiate the library with TxPin, RxPin.
-A6lib A6l(D6, D5);
+A6lib A6l(7, 8);
+//tx and rx pins are opposite side to antenna as of today's date.
+//arduino pin 7 to pin 9 of A6
+//arduino pin 8 to pin 8 of A6
+
 
 int unreadSMSLocs[30] = {0};
 int unreadSMSNum = 0;
@@ -20,8 +24,14 @@ void setup() {
 void loop() {
     callInfo cinfo = A6l.checkCallStatus();
     if (cinfo.direction == DIR_INCOMING) {
-       if (cinfo.number == "1234567890")
-           A6l.sendSMS("1234567890", "I can't come to the phone right now, I'm a machine.");
+       if (cinfo.number == "919999999999")
+        {
+          //add + before your country code as it doesn't appear in the if messages don't get send ex-
+          // CLIP: "91**********",145,,,,1
+          // String new_number="+" + cinfo.number;
+          // Serial.println(new_number);
+           A6l.sendSMS(new_number, "I can't come to the phone right now, I'm a machine.");
+        }
         A6l.hangUp();
     }
 
@@ -37,6 +47,5 @@ void loop() {
         Serial.println(sms.date);
         Serial.println(sms.message);
     }
-
     delay(1000);
 }

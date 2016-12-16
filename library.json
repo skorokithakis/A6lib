@@ -10,5 +10,5 @@
         "url": "https://github.com/skorokithakis/A6lib"
     },
     "frameworks": "arduino",
-    "platforms": "espressif"
+    "platforms": "*"
 }

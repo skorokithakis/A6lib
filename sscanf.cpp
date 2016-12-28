@@ -251,7 +251,7 @@ int vsscanf(const char *buf, const char *s, va_list ap) {
 }
 
 
-int sscanf(const char *buf, const char *fmt, ...) {
+int __attribute__((used)) sscanf(const char *buf, const char *fmt, ...) {
     int             count;
     va_list ap;
 

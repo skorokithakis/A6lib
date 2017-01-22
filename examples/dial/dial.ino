@@ -24,6 +24,10 @@ void loop() {
     callInfo cinfo = A6l.checkCallStatus();
     Serial.println("Call status checked.");
 
+    int sigStrength = A6l.getSignalStrength();
+    Serial.print("Signal strength percentage: ");
+    Serial.println(sigStrength);
+
     delay(5000);
 
     if (cinfo.number != NULL) {

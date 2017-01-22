@@ -84,6 +84,7 @@ public:
     void answer();
     void hangUp();
     callInfo checkCallStatus();
+    int getSignalStrength();
 
     byte sendSMS(String number, String text);
     int getUnreadSMSLocs(int* buf, int maxItems);

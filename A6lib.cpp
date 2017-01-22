@@ -176,6 +176,29 @@ callInfo A6lib::checkCallStatus() {
 }
 
 
+// Get the strength of the GSM signal.
+int A6lib::getSignalStrength() {
+    String response = "";
+    uint32_t respStart = 0;
+    int strength, error  = 0;
+
+    // Issue the command and wait for the response.
+    A6command("AT+CSQ", "OK", "+CSQ", A6_CMD_TIMEOUT, 2, &response);
+
+    respStart = response.indexOf("+CSQ");
+    if (respStart < 0) {
+        return 0;
+    }
+
+    sscanf(response.substring(respStart).c_str(), "+CSQ: %d,%d",
+           &strength, &error);
+
+    // Bring value range 0..31 to 0..100%, don't mind rounding..
+    strength = (strength * 100) / 31;
+    return strength;
+}
+
+
 // Send an SMS.
 byte A6lib::sendSMS(String number, String text) {
     char ctrlZ[2] = { 0x1a, 0x00 };

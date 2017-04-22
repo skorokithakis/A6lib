@@ -88,6 +88,8 @@ public:
 
     byte sendSMS(String number, String text);
     int getUnreadSMSLocs(int* buf, int maxItems);
+    int getSMSLocs(int* buf, int maxItems);
+    int getSMSLocsOfType(int* buf, int maxItems, String type);
     SMSmessage readSMS(int index);
     byte deleteSMS(int index);
     byte setSMScharset(String charset);

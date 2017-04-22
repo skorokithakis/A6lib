@@ -226,11 +226,25 @@ byte A6lib::sendSMS(String number, String text) {
 
 // Retrieve the number and locations of unread SMS messages.
 int A6lib::getUnreadSMSLocs(int* buf, int maxItems) {
+    return getSMSLocsOfType(buf, maxItems, "REC UNREAD");
+}
+
+// Retrieve the number and locations of all SMS messages.
+int A6lib::getSMSLocs(int* buf, int maxItems) {
+    return getSMSLocsOfType(buf, maxItems, "ALL");
+}
+
+// Retrieve the number and locations of all SMS messages.
+int A6lib::getSMSLocsOfType(int* buf, int maxItems, String type) {
     String seqStart = "+CMGL: ";
     String response = "";
 
+    String command = "AT+CMGL=\"";
+    command += type;
+    command += "\"";
+
     // Issue the command and wait for the response.
-    byte status = A6command("AT+CMGL=\"REC UNREAD\"", "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
+    byte status = A6command(command.c_str(), "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
 
     int seqStartLen = seqStart.length();
     int responseLen = response.length();
@@ -249,7 +263,6 @@ int A6lib::getUnreadSMSLocs(int* buf, int maxItems) {
     }
     return occurrences;
 }
-
 
 // Return the SMS at index.
 SMSmessage A6lib::readSMS(int index) {

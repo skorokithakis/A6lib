@@ -97,6 +97,8 @@ public:
     void setVol(byte level);
     void enableSpeaker(byte enable);
 
+    String getRealTimeClock();
+
     SoftwareSerial *A6conn;
 private:
     String read();

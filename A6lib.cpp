@@ -199,6 +199,19 @@ int A6lib::getSignalStrength() {
 }
 
 
+// Get the real time from the modem. Time will be returned as yy/MM/dd,hh:mm:ss+XX
+String A6lib::getRealTimeClock() {
+    String response = "";
+
+    // Issue the command and wait for the response.
+    A6command("AT+CCLK?", "OK", "yy", A6_CMD_TIMEOUT, 1, &response);
+    int respStart = response.indexOf("+CCLK: \"") + 8;
+    response.setCharAt(respStart - 1, '-');
+
+    return response.substring(respStart, response.indexOf("\""));
+}
+
+
 // Send an SMS.
 byte A6lib::sendSMS(String number, String text) {
     char ctrlZ[2] = { 0x1a, 0x00 };

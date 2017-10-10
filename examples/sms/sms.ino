@@ -1,6 +1,6 @@
 #include <A6lib.h>
 
-#ifndef ESP8266
+#ifdef ESP8266
 #define D0 0
 #define D5 8
 #define D6 7
@@ -24,11 +24,13 @@ void setup() {
 }
 
 void loop() {
+    String myNumber = "+1132352890";
+
     callInfo cinfo = A6l.checkCallStatus();
     if (cinfo.direction == DIR_INCOMING) {
-        if ("+1132352890".endsWith(cinfo.number)) {
+        if (myNumber.endsWith(cinfo.number)) {
             // If the number that sent the SMS is ours, reply.
-            A6l.sendSMS(new_number, "I can't come to the phone right now, I'm a machine.");
+            A6l.sendSMS(myNumber, "I can't come to the phone right now, I'm a machine.");
             A6l.hangUp();
         }
 
@@ -46,3 +48,4 @@ void loop() {
         }
         delay(1000);
     }
+}

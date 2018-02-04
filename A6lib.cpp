@@ -68,7 +68,8 @@ byte A6lib::begin(long baudRate) {
     // Turn SMS indicators off.
     A6command("AT+CNMI=1,0", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 
-    // Set SMS storage to the GSM modem.
+    // Set SMS storage to the GSM modem. If this doesn't work for you, try changing the command to:
+    // "AT+CPMS=SM,SM,SM"
     if (A6_OK != A6command("AT+CPMS=ME,ME,ME", "OK", "yy", A6_CMD_TIMEOUT, 2, NULL))
         // This may sometimes fail, in which case the modem needs to be
         // rebooted.

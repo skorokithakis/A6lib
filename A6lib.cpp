@@ -332,7 +332,7 @@ void A6lib::setVol(byte level) {
     char buffer[30];
 
     // level should be between 5 and 8.
-    level = min(max(level, 5), 8);
+    level = _min(_max(level, 5), 8);
     sprintf(buffer, "AT+CLVL=%d", level);
     A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
@@ -344,7 +344,7 @@ void A6lib::enableSpeaker(byte enable) {
     char buffer[30];
 
     // enable should be between 0 and 1.
-    enable = min(max(enable, 0), 1);
+    enable = _min(_max(enable, 0), 1);
     sprintf(buffer, "AT+SNFS=%d", enable);
     A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }

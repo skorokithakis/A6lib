@@ -316,6 +316,15 @@ byte A6lib::deleteSMS(int index) {
     return A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
 
+// Delete SMS with special flags; example 1,4 delete all SMS from the storage area
+byte A6lib::deleteSMS(int index, int flag) {
+    char buffer[20];
+	String command = "AT+CMGD=";
+    command += String(index);
+    command += ",";
+    command += String(flag);
+    return A6command(command.c_str(), "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
+}
 
 // Set the SMS charset.
 byte A6lib::setSMScharset(String charset) {

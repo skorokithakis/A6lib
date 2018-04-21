@@ -472,7 +472,9 @@ byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String 
     byte retVal = 99;
     do {
         reply += read();
-        yield();
+		#ifdef ESP8266
+			yield();
+		#endif
     } while (((reply.indexOf(resp1) + reply.indexOf(resp2)) == -2) && ((millis() - entry) < timeout));
 
     if (reply != "") {

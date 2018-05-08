@@ -1,0 +1,17 @@
+language: python
+python:
+    - "2.7"
+
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
+install:
+    - pip install -U platformio
+    - platformio update
+
+script:
+    - platformio ci --board esp12e -l "." examples/dial/dial.ino
+    - platformio ci --board esp12e -l "." examples/serial_relay/serial_relay.ino
+    - platformio ci --board esp12e -l "." examples/sms/sms.ino

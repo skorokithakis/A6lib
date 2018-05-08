@@ -1,0 +1,6 @@
+style=java
+unpad-paren
+pad-header
+add-brackets
+convert-tabs
+pad-oper

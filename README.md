@@ -1,5 +1,7 @@
 # A6lib
 
+[![Build Status](https://travis-ci.com/skorokithakis/A6lib.svg?branch=master)](https://travis-ci.com/skorokithakis/A6lib)
+
 An ESP8266/Arduino library for communicating with the AI-Thinker A6 GSM module.
 It will probably also work with other GSM modules that use the AT command set,
 like the SIM900.

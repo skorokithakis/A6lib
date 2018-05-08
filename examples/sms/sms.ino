@@ -11,7 +11,7 @@ A6lib A6l(D6, D5);
 
 int unreadSMSLocs[30] = {0};
 int unreadSMSNum = 0;
-SMSmessage sms;
+SMSInfo sms;
 
 void setup() {
     Serial.begin(115200);

@@ -1,24 +1,72 @@
-#include <Arduino.h>
-#include <SoftwareSerial.h>
+#include <stdarg.h>
+
 #include "A6lib.h"
 
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+#define A6_CMD_TIMEOUT 2000
 
-/////////////////////////////////////////////
-// Public methods.
-//
-
-A6lib::A6lib(int transmitPin, int receivePin) {
-#ifdef ESP8266
-    A6conn = new SoftwareSerial(receivePin, transmitPin, false, 1024);
-#else
-    A6conn = new SoftwareSerial(receivePin, transmitPin, false);
+#ifdef DEBUG
+#ifndef DEBUG_PORT
+#define DEBUG_PORT Serial
 #endif
-    A6conn->setTimeout(100);
+#endif // DEBUG
+
+void LOG(const char* format, ...) {
+#ifdef DEBUG
+    char buff[128];
+    va_list args;
+    va_start(args, format);
+    vsnprintf(buff, sizeof(buff), format, args);
+    va_end(args);
+    DEBUG_PORT.print("\n[A6lib] ");
+    DEBUG_PORT.print(buff);
+#endif // DEBUG
 }
 
 
+/*!
+ * \class A6lib Constructs A6lib object.
+ * \brief
+ */
+
+/*!
+ * \brief A6lib::A6lib Constructs A6lib object with the given serial port.
+ * \param port HardwareSerial object for use inside A6lib.
+ */
+A6lib::A6lib(HardwareSerial* port) : stream{ port } {
+    stream->setTimeout(100);
+    ports.state = PortState::Using_HardWareSerial;
+    ports.hport = port;
+}
+
+/*!
+ * \brief A6lib::A6lib Constructs A6lib object with the given serial port.
+ * \param port SoftwareSerial object for use inside A6lib
+ */
+A6lib::A6lib(SoftwareSerial* port) : stream{ port } {
+    stream->setTimeout(100);
+    ports.state = PortState::Using_SoftWareSerial;
+    ports.sport = port;
+}
+
+/*!
+ * \brief A6lib::A6lib Constructs A6lib object with the given pin numbers. this is done by creating new SoftwareSerial object.
+ * \param tx_pin SoftwareSerial TX pin
+ * \param rx_pin SoftwareSerial RX pin
+ */
+A6lib::A6lib(uint8_t tx_pin, uint8_t rx_pin) {
+    ports.state = PortState::New_SoftwareSerial;
+    ports.sport = new SoftwareSerial(rx_pin, tx_pin);
+    stream = ports.sport;
+    stream->setTimeout(100);
+}
+
+/*!
+ * \brief A6lib::~A6lib Destroys A6lib object.
+ */
 A6lib::~A6lib() {
-    delete A6conn;
+    if (ports.testState(PortState::New_SoftwareSerial) && ports.sport)
+        delete ports.sport;
 }
 
 
@@ -34,7 +82,7 @@ byte A6lib::blockUntilReady(long baudRate) {
             return A6_FAILURE;
         }
         delay(1000);
-        logln("Waiting for module to be ready...");
+        LOG("Waiting for module to be ready...");
     }
     return A6_OK;
 }
@@ -43,8 +91,13 @@ byte A6lib::blockUntilReady(long baudRate) {
 // Initialize the software serial connection and change the baud rate from the
 // default (autodetected) to the desired speed.
 byte A6lib::begin(long baudRate) {
-
-    A6conn->flush();
+    if (ports.testState(PortState::Using_SoftWareSerial))
+        LOG("starting with SoftwareSerial object");
+    else if (ports.testState(PortState::Using_HardWareSerial))
+        LOG("starting with HardwareSerial object");
+    else
+        LOG("starting with new SoftwareSerial object");
+    stream->flush();
 
     if (A6_OK != setRate(baudRate)) {
         return A6_NOTOK;
@@ -87,7 +140,7 @@ byte A6lib::begin(long baudRate) {
 // Reboot the module by setting the specified pin HIGH, then LOW. The pin should
 // be connected to a P-MOSFET, not the A6's POWER pin.
 void A6lib::powerCycle(int pin) {
-    logln("Power-cycling module...");
+    LOG("Power-cycling module...");
 
     powerOff(pin);
 
@@ -96,11 +149,11 @@ void A6lib::powerCycle(int pin) {
     powerOn(pin);
 
     // Give the module some time to settle.
-    logln("Done, waiting for the module to initialize...");
+    LOG("Done, waiting for the module to initialize...");
     delay(20000);
-    logln("Done.");
+    LOG("Done.");
 
-    A6conn->flush();
+    stream->flush();
 }
 
 
@@ -122,7 +175,7 @@ void A6lib::powerOn(int pin) {
 void A6lib::dial(String number) {
     char buffer[50];
 
-    logln("Dialing number...");
+    LOG("Dialing number...");
 
     sprintf(buffer, "ATD%s;", number.c_str());
     A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
@@ -131,7 +184,7 @@ void A6lib::dial(String number) {
 
 // Redial the last number.
 void A6lib::redial() {
-    logln("Redialing last number...");
+    LOG("Redialing last number...");
     A6command("AT+DLST", "OK", "CONNECT", A6_CMD_TIMEOUT, 2, NULL);
 }
 
@@ -153,9 +206,7 @@ callInfo A6lib::checkCallStatus() {
     char number[50];
     String response = "";
     uint32_t respStart = 0, matched = 0;
-    callInfo cinfo = (const struct callInfo) {
-        0
-    };
+    callInfo cinfo;
 
     // Issue the command and wait for the response.
     A6command("AT+CLCC", "OK", "+CLCC", A6_CMD_TIMEOUT, 2, &response);
@@ -169,7 +220,7 @@ callInfo A6lib::checkCallStatus() {
 
     uint8_t comma_index = cinfo.number.indexOf('"');
     if (comma_index != -1) {
-        logln("Extra comma found.");
+        LOG("Extra comma found.");
         cinfo.number = cinfo.number.substring(0, comma_index);
     }
 
@@ -181,7 +232,7 @@ callInfo A6lib::checkCallStatus() {
 int A6lib::getSignalStrength() {
     String response = "";
     uint32_t respStart = 0;
-    int strength, error  = 0;
+    int strength, error = 0;
 
     // Issue the command and wait for the response.
     A6command("AT+CSQ", "OK", "+CSQ", A6_CMD_TIMEOUT, 2, &response);
@@ -223,16 +274,16 @@ byte A6lib::sendSMS(String number, String text) {
         return A6_NOTOK;
     }
 
-    log("Sending SMS to ");
-    log(number);
-    logln("...");
+    LOG("Sending SMS to ");
+    LOG(number.c_str());
+    LOG("...");
 
     sprintf(buffer, "AT+CMGS=\"%s\"", number.c_str());
     A6command(buffer, ">", "yy", A6_CMD_TIMEOUT, 2, NULL);
     delay(100);
-    A6conn->println(text.c_str());
-    A6conn->println(ctrlZ);
-    A6conn->println();
+    stream->println(text.c_str());
+    stream->println(ctrlZ);
+    stream->println();
 
     return A6_OK;
 }
@@ -279,7 +330,7 @@ int A6lib::getSMSLocsOfType(int* buf, int maxItems, String type) {
 }
 
 // Return the SMS at index.
-SMSmessage A6lib::readSMS(int index) {
+SMSInfo A6lib::readSMS(int index) {
     String response = "";
     char buffer[30];
 
@@ -292,9 +343,7 @@ SMSmessage A6lib::readSMS(int index) {
     char date[50];
     char type[10];
     int respStart = 0, matched = 0;
-    SMSmessage sms = (const struct SMSmessage) {
-        "", "", ""
-    };
+    SMSInfo sms;
 
     // Parse the response if it contains a valid +CLCC.
     respStart = response.indexOf("+CMGR");
@@ -319,7 +368,7 @@ byte A6lib::deleteSMS(int index) {
 // Delete SMS with special flags; example 1,4 delete all SMS from the storage area
 byte A6lib::deleteSMS(int index, int flag) {
     char buffer[20];
-	String command = "AT+CMGD=";
+    String command = "AT+CMGD=";
     command += String(index);
     command += ",";
     command += String(flag);
@@ -369,17 +418,20 @@ void A6lib::enableSpeaker(byte enable) {
 
 long A6lib::detectRate() {
     unsigned long rate = 0;
-    unsigned long rates[] = {9600, 115200};
+    unsigned long rates[] = { 9600, 115200 };
 
     // Try to autodetect the rate.
-    logln("Autodetecting connection rate...");
+    LOG("Autodetecting connection rate...");
     for (int i = 0; i < countof(rates); i++) {
         rate = rates[i];
 
-        A6conn->begin(rate);
-        log("Trying rate ");
-        log(rate);
-        logln("...");
+        if (ports.hport != nullptr)
+            ports.hport->begin(rate);
+        else if (ports.sport != nullptr)
+            ports.sport->begin(rate);
+        LOG("Trying rate ");
+        LOG(String(rate).c_str());
+        LOG("...");
 
         delay(100);
         if (A6command("\rAT", "OK", "+CME", 2000, 2, NULL) == A6_OK) {
@@ -387,7 +439,7 @@ long A6lib::detectRate() {
         }
     }
 
-    logln("Couldn't detect the rate.");
+    LOG("Couldn't detect the rate.");
 
     return A6_NOTOK;
 }
@@ -405,17 +457,20 @@ char A6lib::setRate(long baudRate) {
     // The rate is already the desired rate, return.
     //if (rate == baudRate) return OK;
 
-    logln("Setting baud rate on the module...");
+    LOG("Setting baud rate on the module...");
 
     // Change the rate to the requested.
     char buffer[30];
     sprintf(buffer, "AT+IPR=%d", baudRate);
     A6command(buffer, "OK", "+IPR=", A6_CMD_TIMEOUT, 3, NULL);
 
-    logln("Switching to the new rate...");
+    LOG("Switching to the new rate...");
     // Begin the connection again at the requested rate.
-    A6conn->begin(baudRate);
-    logln("Rate set.");
+    if (ports.hport != nullptr)
+        ports.hport->begin(rate);
+    else if (ports.sport != nullptr)
+        ports.sport->begin(rate);
+    LOG("Rate set.");
 
     return A6_OK;
 }
@@ -424,8 +479,9 @@ char A6lib::setRate(long baudRate) {
 // Read some data from the A6 in a non-blocking manner.
 String A6lib::read() {
     String reply = "";
-    if (A6conn->available()) {
-        reply = A6conn->readString();
+
+    if (stream->available()) {
+        reply = stream->readString();
     }
 
     // XXX: Replace NULs with \xff so we can match on them.
@@ -444,18 +500,19 @@ byte A6lib::A6command(const char *command, const char *resp1, const char *resp2,
     byte count = 0;
 
     // Get rid of any buffered output.
-    A6conn->flush();
+    stream->flush();
 
     while (count < repetitions && returnValue != A6_OK) {
-        log("Issuing command: ");
-        logln(command);
+        LOG("Issuing command: ");
+        LOG(command);
 
-        A6conn->write(command);
-        A6conn->write('\r');
+        stream->write(command);
+        stream->write('\r');
 
         if (A6waitFor(resp1, resp2, timeout, response) == A6_OK) {
             returnValue = A6_OK;
-        } else {
+        }
+        else {
             returnValue = A6_NOTOK;
         }
         count++;
@@ -472,16 +529,16 @@ byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String 
     byte retVal = 99;
     do {
         reply += read();
-		#ifdef ESP8266
-			yield();
-		#endif
+#ifdef ESP8266
+        yield();
+#endif
     } while (((reply.indexOf(resp1) + reply.indexOf(resp2)) == -2) && ((millis() - entry) < timeout));
 
     if (reply != "") {
-        log("Reply in ");
-        log((millis() - entry));
-        log(" ms: ");
-        logln(reply);
+        LOG("Reply in ");
+        LOG(String(millis() - entry).c_str());
+        LOG(" ms: ");
+        LOG(reply.c_str());
     }
 
     if (response != NULL) {
@@ -490,13 +547,13 @@ byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String 
 
     if ((millis() - entry) >= timeout) {
         retVal = A6_TIMEOUT;
-        logln("Timed out.");
+        LOG("Timed out.");
     } else {
         if (reply.indexOf(resp1) + reply.indexOf(resp2) > -2) {
-            logln("Reply OK.");
+            LOG("Reply OK.");
             retVal = A6_OK;
         } else {
-            logln("Reply NOT OK.");
+            LOG("Reply NOT OK.");
             retVal = A6_NOTOK;
         }
     }

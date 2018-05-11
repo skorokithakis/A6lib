@@ -1,26 +1,14 @@
-#ifndef A6lib_h
-#define A6lib_h
+#ifndef A6LIB_H
+#define A6LIB_H
 
 #include <Arduino.h>
-#include "SoftwareSerial.h"
-
-#ifdef DEBUG
-#define log(msg) Serial.print(msg)
-#define logln(msg) Serial.println(msg)
-#else
-#define log(msg)
-#define logln(msg)
-#endif
-
-#define countof(a) (sizeof(a) / sizeof(a[0]))
+#include <SoftwareSerial.h>
+#include <HardwareSerial.h>
 
 #define A6_OK 0
 #define A6_NOTOK 1
 #define A6_TIMEOUT 2
 #define A6_FAILURE 3
-
-#define A6_CMD_TIMEOUT 2000
-
 
 enum call_direction {
     DIR_OUTGOING = 0,
@@ -50,7 +38,11 @@ enum call_mode {
     MODE_UNKNOWN = 9
 };
 
-struct SMSmessage {
+struct SMSInfo {
+    SMSInfo() : number{}, date{}, message{} {
+
+    }
+
     String number;
     String date;
     String message;
@@ -66,10 +58,11 @@ struct callInfo {
     int type;
 };
 
-
 class A6lib {
 public:
-    A6lib(int transmitPin, int receivePin);
+    A6lib(HardwareSerial* port);
+    A6lib(SoftwareSerial* port);
+    A6lib(uint8_t tx_pin, uint8_t rx_pin);
     ~A6lib();
 
     byte begin(long baudRate);
@@ -90,9 +83,9 @@ public:
     int getUnreadSMSLocs(int* buf, int maxItems);
     int getSMSLocs(int* buf, int maxItems);
     int getSMSLocsOfType(int* buf, int maxItems, String type);
-    SMSmessage readSMS(int index);
+    SMSInfo readSMS(int index);
     byte deleteSMS(int index);
-	byte deleteSMS(int index, int flag);
+    byte deleteSMS(int index, int flag);
     byte setSMScharset(String charset);
 
     void setVol(byte level);
@@ -107,5 +100,25 @@ private:
     byte A6waitFor(const char *resp1, const char *resp2, int timeout, String *response);
     long detectRate();
     char setRate(long baudRate);
+
+protected:
+    Stream* stream = nullptr;
+    struct SerialPorts {
+        enum PortState {
+            Using_SoftWareSerial = 1,
+            Using_HardWareSerial,
+            New_SoftwareSerial,
+        };
+        PortState state;
+        bool testState(PortState st) {
+            return state == st;
+        }
+        union {
+            HardwareSerial* hport;
+            SoftwareSerial* sport;
+        };
+    } ports;
+    using PortState = SerialPorts::PortState;
 };
-#endif
+
+#endif // A6LIB_H

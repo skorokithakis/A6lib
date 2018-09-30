@@ -92,7 +92,7 @@ public:
     int getSMSLocsOfType(int* buf, int maxItems, String type);
     SMSmessage readSMS(int index);
     byte deleteSMS(int index);
-	byte deleteSMS(int index, int flag);
+    byte deleteSMS(int index, int flag);
     byte setSMScharset(String charset);
 
     void setVol(byte level);

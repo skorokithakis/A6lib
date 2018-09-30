@@ -3,9 +3,9 @@
 #include "A6lib.h"
 
 #ifdef ESP8266
-    #define min _min
-    #define max _max
-#endif	
+#define min _min
+#define max _max
+#endif
 
 /////////////////////////////////////////////
 // Public methods.
@@ -323,7 +323,7 @@ byte A6lib::deleteSMS(int index) {
 // Delete SMS with special flags; example 1,4 delete all SMS from the storage area
 byte A6lib::deleteSMS(int index, int flag) {
     char buffer[20];
-	String command = "AT+CMGD=";
+    String command = "AT+CMGD=";
     command += String(index);
     command += ",";
     command += String(flag);
@@ -345,7 +345,7 @@ void A6lib::setVol(byte level) {
     char buffer[30];
 
     // level should be between 5 and 8.
-	level = min(max(level, 5), 8);	
+    level = min(max(level, 5), 8);
     sprintf(buffer, "AT+CLVL=%d", level);
     A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
@@ -357,7 +357,7 @@ void A6lib::enableSpeaker(byte enable) {
     char buffer[30];
 
     // enable should be between 0 and 1.
-	enable = min(max(enable, 0), 1);
+    enable = min(max(enable, 0), 1);
     sprintf(buffer, "AT+SNFS=%d", enable);
     A6command(buffer, "OK", "yy", A6_CMD_TIMEOUT, 2, NULL);
 }
@@ -476,9 +476,9 @@ byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String 
     byte retVal = 99;
     do {
         reply += read();
-		#ifdef ESP8266
-			yield();
-		#endif
+#ifdef ESP8266
+        yield();
+#endif
     } while (((reply.indexOf(resp1) + reply.indexOf(resp2)) == -2) && ((millis() - entry) < timeout));
 
     if (reply != "") {

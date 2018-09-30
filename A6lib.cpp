@@ -156,7 +156,7 @@ void A6lib::hangUp() {
 callInfo A6lib::checkCallStatus() {
     char number[50];
     String response = "";
-    uint32_t respStart = 0, matched = 0;
+    uint32_t respStart = 0;
     callInfo cinfo = (const struct callInfo) {
         0
     };
@@ -167,7 +167,7 @@ callInfo A6lib::checkCallStatus() {
     // Parse the response if it contains a valid +CLCC.
     respStart = response.indexOf("+CLCC");
     if (respStart >= 0) {
-        matched = sscanf(response.substring(respStart).c_str(), "+CLCC: %d,%d,%d,%d,%d,\"%s\",%d", &cinfo.index, &cinfo.direction, &cinfo.state, &cinfo.mode, &cinfo.multiparty, number, &cinfo.type);
+        sscanf(response.substring(respStart).c_str(), "+CLCC: %d,%d,%d,%d,%d,\"%s\",%d", &cinfo.index, &cinfo.direction, &cinfo.state, &cinfo.mode, &cinfo.multiparty, number, &cinfo.type);
         cinfo.number = String(number);
     }
 
@@ -262,7 +262,7 @@ int A6lib::getSMSLocsOfType(int* buf, int maxItems, String type) {
     command += "\"";
 
     // Issue the command and wait for the response.
-    byte status = A6command(command.c_str(), "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
+    A6command(command.c_str(), "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
 
     int seqStartLen = seqStart.length();
     int responseLen = response.length();
@@ -291,11 +291,10 @@ SMSmessage A6lib::readSMS(int index) {
     sprintf(buffer, "AT+CMGR=%d", index);
     A6command(buffer, "\xff\r\nOK\r\n", "\r\nOK\r\n", A6_CMD_TIMEOUT, 2, &response);
 
-    char message[200];
     char number[50];
     char date[50];
     char type[10];
-    int respStart = 0, matched = 0;
+    int respStart = 0;
     SMSmessage sms = (const struct SMSmessage) {
         "", "", ""
     };
@@ -304,7 +303,7 @@ SMSmessage A6lib::readSMS(int index) {
     respStart = response.indexOf("+CMGR");
     if (respStart >= 0) {
         // Parse the message header.
-        matched = sscanf(response.substring(respStart).c_str(), "+CMGR: \"REC %s\",\"%s\",,\"%s\"\r\n", type, number, date);
+        sscanf(response.substring(respStart).c_str(), "+CMGR: \"REC %s\",\"%s\",,\"%s\"\r\n", type, number, date);
         sms.number = String(number);
         sms.date = String(date);
         // The rest is the message, extract it.
@@ -322,7 +321,6 @@ byte A6lib::deleteSMS(int index) {
 
 // Delete SMS with special flags; example 1,4 delete all SMS from the storage area
 byte A6lib::deleteSMS(int index, int flag) {
-    char buffer[20];
     String command = "AT+CMGD=";
     command += String(index);
     command += ",";
@@ -471,7 +469,6 @@ byte A6lib::A6command(const char *command, const char *resp1, const char *resp2,
 // Wait for responses.
 byte A6lib::A6waitFor(const char *resp1, const char *resp2, int timeout, String *response) {
     unsigned long entry = millis();
-    int count = 0;
     String reply = "";
     byte retVal = 99;
     do {
